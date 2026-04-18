@@ -4,13 +4,48 @@ import "./styles.css";
 const sections = [
   {
     id: "about",
-    title: "Earth",
+    title: "Sun",
     subtitle: "About Me",
     description:
       "I am a Software Engineering student at the University of Alberta (Expected Graduation 2027) with a proven track record of delivering high-impact solutions across multiple internships. My expertise spans full-stack development, performance optimization, and AI integration, with successful tenures at Ericsson, Pason Systems, and ANC. I specialize in building scalable applications that solve complex problems, from RAG chatbots to 5G network testing automation.",
+    color: "#ffb347",
+    position: new THREE.Vector3(0, 0, 0),
+    facts: [],
+  },
+  {
+    id: "projects",
+    title: "Earth",
+    subtitle: "Projects",
+    description:
+      "Some Stuff I've built.",
     color: "#6cb7ff",
     position: new THREE.Vector3(-28, 2, -24),
-    facts: [],
+    facts: [
+      [
+        "311 Forecasting System",
+        "FastAPI, React, TypeScript, Postgres, LightGBM",
+        "ML pipeline integrating real-time environmental data to forecast municipal 311 service volume.",
+        { Github: "https://github.com/pratham124/311-forecast-system" }
+      ],
+      [
+        "Pharmacology Learning App",
+        "TypeScript, React, Django, PostgreSQL, OpenAI",
+        "Full-stack educational platform that generates AI-personalized learning games from uploaded PDFs.",
+        { Demo: "https://www.youtube.com/watch?v=dPoCqzmb8Dw" }
+      ],
+      [
+        "RareQuest",
+        "JavaScript, Firebase",
+        "Educational web game built for a nonprofit to teach rare disease diagnosis.",
+        { Github: "https://github.com/owencooke/RQMO12", Website: "https://rqmo12-game.web.app/" }
+      ],
+      [
+        "HomeTrack",
+        "Java, Android, Firebase, JUnit",
+        "Household inventory management app featuring image-based serial number scanning and smart filtering.",
+        { Github: "https://github.com/CMPUT301F23T06/SoftwareSolutionsSquad" }
+      ],
+    ],
   },
   {
     id: "skills",
@@ -24,12 +59,11 @@ const sections = [
       ["Languages", "Python, JavaScript, TypeScript, Java, C#, SQL, Bash, HTML, CSS"],
       ["Frameworks & Libraries", "React, Angular, Node, Spring Boot, .NET, Express, Django, FastAPI, LangChain, Redux, Cypress"],
       ["Cloud & Tools", "Docker, Kubernetes, Jenkins, Azure, Git, Linux, Claude Code, Jira, Confluence, PowerBI"],
-      ["Education", "B.S. Software Engineering @ University of Alberta (2027)"],
       ["Soft Skills", "Teamwork, Communication, Problem Solving, Adaptability, Time Management, Leadership"]
     ],
   },
   {
-    id: "projects",
+    id: "experience",
     title: "Jupiter",
     subtitle: "Experience",
     description:
@@ -49,7 +83,7 @@ const sections = [
     title: "Saturn",
     subtitle: "Contact",
     description:
-      "Feel free to reach out if you'd like to chat about opportunities, projects, resume or anything else!",
+      "Feel free to reach out if you'd like to chat about opportunities, experience, resume or anything else!",
     color: "#e6d28a",
     position: new THREE.Vector3(-10, -5, 24),
     facts: [
@@ -69,10 +103,11 @@ const LAYOUT_PRESETS = {
     chaseDistance: 18.5,
     chaseHeight: 5.8,
     positions: {
-      about: new THREE.Vector3(-28, 2, -24),
-      skills: new THREE.Vector3(24, -2, -12),
-      projects: new THREE.Vector3(20, 1, 28),
-      contact: new THREE.Vector3(-10, -5, 24),
+      about: new THREE.Vector3(0, 0, 0),
+      projects: new THREE.Vector3(-42, 2, -36),
+      skills: new THREE.Vector3(36, -2, -18),
+      experience: new THREE.Vector3(30, 1, 42),
+      contact: new THREE.Vector3(-15, -5, 36),
     },
   },
   tablet: {
@@ -81,10 +116,11 @@ const LAYOUT_PRESETS = {
     chaseDistance: 20,
     chaseHeight: 6.6,
     positions: {
-      about: new THREE.Vector3(-26, 2, -20),
-      skills: new THREE.Vector3(21, -2, -10),
-      projects: new THREE.Vector3(17, 1, 22),
-      contact: new THREE.Vector3(-10, -5, 20),
+      about: new THREE.Vector3(0, 0, 0),
+      projects: new THREE.Vector3(-38, 2, -30),
+      skills: new THREE.Vector3(30, -2, -14),
+      experience: new THREE.Vector3(24, 1, 34),
+      contact: new THREE.Vector3(-15, -5, 30),
     },
   },
   mobile: {
@@ -93,10 +129,11 @@ const LAYOUT_PRESETS = {
     chaseDistance: 23,
     chaseHeight: 8.8,
     positions: {
-      about: new THREE.Vector3(-18, 3, -10),
-      skills: new THREE.Vector3(14, -2, -6),
-      projects: new THREE.Vector3(10, 2, 12),
-      contact: new THREE.Vector3(-10, -4, 10),
+      about: new THREE.Vector3(0, 0, 0),
+      projects: new THREE.Vector3(-26, 3, -14),
+      skills: new THREE.Vector3(20, -2, -9),
+      experience: new THREE.Vector3(15, 2, 18),
+      contact: new THREE.Vector3(-15, -4, 15),
     },
   },
 };
@@ -594,6 +631,57 @@ function makeNoiseLayer(ctx, size, color, count, minRadius, maxRadius, alpha = 1
   ctx.restore();
 }
 
+const textureLoader = new THREE.TextureLoader();
+const planetTextures = {
+  Sun: textureLoader.load("/textures/sunmap.jpg"),
+  Earth: textureLoader.load("/textures/earthmap1k.jpg"),
+  Mars: textureLoader.load("/textures/marsmap1k.jpg"),
+  Jupiter: textureLoader.load("/textures/jupitermap.jpg"),
+  Saturn: textureLoader.load("/textures/saturnmap.jpg"),
+};
+
+function createSaturnRingTexture() {
+  const size = 1024;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  const center = size / 2;
+
+  const grad = ctx.createRadialGradient(center, center, 0, center, center, center);
+  grad.addColorStop(0.0, "rgba(0,0,0,0)");
+  grad.addColorStop(0.5, "rgba(0,0,0,0)");
+  grad.addColorStop(0.52, "rgba(100,90,80, 0.4)");
+  grad.addColorStop(0.55, "rgba(150,135,110, 0.7)");
+  grad.addColorStop(0.68, "rgba(220,205,170, 0.95)");
+  grad.addColorStop(0.72, "rgba(235,225,190, 0.98)");
+  grad.addColorStop(0.74, "rgba(0,0,0,0.2)");
+  grad.addColorStop(0.76, "rgba(0,0,0,0.2)");
+  grad.addColorStop(0.77, "rgba(180,165,135, 0.85)");
+  grad.addColorStop(0.88, "rgba(160,140,110, 0.6)");
+  grad.addColorStop(0.92, "rgba(90,80,70, 0.3)");
+  grad.addColorStop(1.0, "rgba(0,0,0,0)");
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+
+  for (let i = 0; i < 300; i++) {
+    const radius = THREE.MathUtils.randFloat(center * 0.51, center * 0.95);
+    const width = THREE.MathUtils.randFloat(0.5, 2.0);
+    const isDark = Math.random() > 0.5;
+    const alpha = THREE.MathUtils.randFloat(0.05, 0.15);
+    ctx.beginPath();
+    ctx.arc(center, center, radius, 0, Math.PI * 2);
+    ctx.lineWidth = width;
+    ctx.strokeStyle = isDark ? `rgba(0,0,0,${alpha})` : `rgba(255,255,255,${alpha})`;
+    ctx.stroke();
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
 function createPlanetTexture(name, baseColor) {
   const size = 1024;
   const textureCanvas = document.createElement("canvas");
@@ -601,6 +689,46 @@ function createPlanetTexture(name, baseColor) {
   textureCanvas.height = size;
   const ctx = textureCanvas.getContext("2d");
   const base = new THREE.Color(baseColor);
+
+  if (name === "Sun") {
+    const solarGradient = ctx.createRadialGradient(
+      size * 0.45,
+      size * 0.42,
+      size * 0.12,
+      size * 0.5,
+      size * 0.5,
+      size * 0.5,
+    );
+    solarGradient.addColorStop(0, "#fff7c2");
+    solarGradient.addColorStop(0.28, "#ffd36a");
+    solarGradient.addColorStop(0.58, "#ff9a3d");
+    solarGradient.addColorStop(1, "#b84518");
+    ctx.fillStyle = solarGradient;
+    ctx.fillRect(0, 0, size, size);
+
+    for (let index = 0; index < 22; index += 1) {
+      const flareRadius = size * THREE.MathUtils.randFloat(0.12, 0.32);
+      const x = size * THREE.MathUtils.randFloat(0.18, 0.82);
+      const y = size * THREE.MathUtils.randFloat(0.18, 0.82);
+      const flare = ctx.createRadialGradient(x, y, 0, x, y, flareRadius);
+      flare.addColorStop(0, "rgba(255, 247, 194, 0.95)");
+      flare.addColorStop(0.35, "rgba(255, 192, 96, 0.35)");
+      flare.addColorStop(1, "rgba(255, 128, 56, 0)");
+      ctx.fillStyle = flare;
+      ctx.beginPath();
+      ctx.arc(x, y, flareRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    makeNoiseLayer(ctx, size, "#fff1ab", 220, 18, 56, 0.08);
+    makeNoiseLayer(ctx, size, "#ff8a3c", 180, 10, 32, 0.12);
+
+    const texture = new THREE.CanvasTexture(textureCanvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    return texture;
+  }
 
   const gradient = ctx.createLinearGradient(0, 0, size, size);
   gradient.addColorStop(0, `#${base.clone().offsetHSL(0, 0.03, 0.12).getHexString()}`);
@@ -658,19 +786,24 @@ function createPlanet(section) {
   const group = new THREE.Group();
   const baseColor = new THREE.Color(section.color);
   const planetConfig = {
+    Sun: { radius: 6.6, glowRadius: 8.7, ringRadius: null, emissive: "#ff9d36", emissiveIntensity: 2.8 },
     Earth: { radius: 4.5, glowRadius: 5.3, ringRadius: null },
     Mars: { radius: 4, glowRadius: 4.8, ringRadius: null },
-    Jupiter: { radius: 5.6, glowRadius: 6.6, ringRadius: null },
-    Saturn: { radius: 5.1, glowRadius: 6, ringRadius: 7.8 },
-  }[section.title] || { radius: 4.5, glowRadius: 5.3, ringRadius: null };
+    Jupiter: { radius: 5.6, glowRadius: 6.6, ring: null },
+    Saturn: { radius: 5.1, glowRadius: 6, ring: { inner: 6.2, outer: 12.0 } },
+  }[section.title] || { radius: 4.5, glowRadius: 5.3, ring: null };
 
+  const isSun = section.title === "Sun";
   const planet = new THREE.Mesh(
     new THREE.SphereGeometry(planetConfig.radius, 48, 48),
     new THREE.MeshStandardMaterial({
       color: 0xffffff,
-      map: createPlanetTexture(section.title, section.color),
-      roughness: 0.92,
-      metalness: 0.02,
+      map: planetTextures[section.title] || createPlanetTexture(section.title, section.color),
+      emissive: isSun ? 0xffffff : (planetConfig.emissive || 0x000000),
+      emissiveMap: isSun ? planetTextures["Sun"] : null,
+      emissiveIntensity: isSun ? 2.8 : (planetConfig.emissiveIntensity || 0),
+      roughness: isSun ? 1.0 : 0.92,
+      metalness: isSun ? 0.0 : 0.02,
     }),
   );
   group.add(planet);
@@ -681,20 +814,45 @@ function createPlanet(section) {
       color: baseColor,
       transparent: true,
       opacity: 0.11,
+      depthWrite: false,
     }),
   );
   group.add(glow);
 
+  let corona = null;
+  if (section.title === "Sun") {
+    corona = new THREE.Mesh(
+      new THREE.SphereGeometry(planetConfig.glowRadius * 1.18, 32, 32),
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color("#ffbf66"),
+        transparent: true,
+        opacity: 0.13,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    );
+    group.add(corona);
+
+    const starLight = new THREE.PointLight(0xffbd66, 18, 140, 1.4);
+    starLight.position.set(0, 0, 0);
+    group.add(starLight);
+  }
+
   let ring = null;
-  if (planetConfig.ringRadius) {
+  if (planetConfig.ring) {
     ring = new THREE.Mesh(
-      new THREE.TorusGeometry(planetConfig.ringRadius, 0.12, 16, 180),
-      orbitRingMaterial.clone(),
+      new THREE.RingGeometry(planetConfig.ring.inner, planetConfig.ring.outer, 128),
+      new THREE.MeshStandardMaterial({
+        map: createSaturnRingTexture(),
+        transparent: true,
+        opacity: 0.95,
+        side: THREE.DoubleSide,
+        roughness: 0.8,
+        metalness: 0.1,
+      })
     );
     ring.rotation.x = Math.PI / 2;
     ring.rotation.y = 0.48;
-    ring.material.color = new THREE.Color("#b8a57b");
-    ring.material.opacity = 0.48;
     group.add(ring);
   }
 
@@ -702,6 +860,7 @@ function createPlanet(section) {
   group.userData = {
     section,
     ring,
+    corona,
     glow,
     radius: planetConfig.radius,
   };
@@ -763,12 +922,12 @@ function setContent(section, customText) {
     return;
   }
 
-  titleEl.textContent = section ? section.subtitle : "Explore the planets";
+  titleEl.textContent = section ? section.subtitle : "Explore the system";
   descriptionEl.textContent =
     customText ||
     (section
       ? section.description
-      : "Click a planet to jump to a section and fly around with the arrow keys.");
+      : "Click a planet or the Sun to jump to a section and fly around with the arrow keys.");
 
   pointsEl.innerHTML = "";
 
@@ -776,9 +935,9 @@ function setContent(section, customText) {
     ? section.facts
     : [
       ["Desktop", "Use the keypad or keyboard to steer the rocket and change its viewing angle while flying."],
-      ["Mobile", "Tap a planet to engage autopilot, then use the zoom buttons to adjust your distance."],
-      ["Scene", "A 3D universe with textured solar-system planets and a chase camera behind the rocket."],
-      ["Portfolio", "Swap placeholder copy with your real story, projects, and contact links."],
+      ["Mobile", "Tap a planet or the Sun to engage autopilot, then use the zoom buttons to adjust your distance."],
+      ["Scene", "A 3D universe with textured solar-system bodies and a chase camera behind the rocket."],
+      ["Portfolio", "Swap placeholder copy with your real story, experience, and contact links."],
     ];
 
   items.forEach((item) => {
@@ -791,13 +950,40 @@ function setContent(section, customText) {
     const label = item[0];
     let title = null;
     let value = item[1];
+    let linksObj = null;
 
-    if (item.length === 3) {
+    if (item.length >= 3) {
       title = item[1];
       value = item[2];
     }
+    if (item.length === 4) {
+      linksObj = item[3];
+    }
 
-    let innerHTML = `<strong>${label}</strong>`;
+    let innerHTML = "";
+
+    if (linksObj) {
+      const linkStr = Object.entries(linksObj)
+        .filter(([_, url]) => url)
+        .map(([key, url]) => {
+          let svg = '';
+          const lKey = key.toLowerCase();
+          if (lKey === 'github') {
+            svg = `<svg style="width:1.15em; height:1.15em;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>`;
+          } else if (lKey === 'demo') {
+            svg = `<svg style="width:1.25em; height:1.25em;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>`;
+          } else {
+            svg = `<svg style="width:1.15em; height:1.15em;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`;
+          }
+          return `<a href="${url}" target="_blank" title="${key}" style="color: var(--cyan); text-decoration: none; transition: color 0.15s, transform 0.15s; display: inline-flex; align-items: center;" onmouseover="this.style.color='#fff'; this.style.transform='scale(1.1)';" onmouseout="this.style.color='var(--cyan)'; this.style.transform='scale(1)';">${svg}</a>`;
+        })
+        .join('');
+
+      innerHTML = `<div style="margin-bottom: 0.2rem; display: flex; align-items: center; justify-content: space-between;"><strong style="margin-bottom: 0;">${label}</strong> <span style="display: flex; gap: 0.6rem; align-items: center; opacity: 0.85;">${linkStr}</span></div>`;
+    } else {
+      innerHTML = `<strong>${label}</strong>`;
+    }
+
     if (title) {
       innerHTML += `<em>${title}</em>`;
     }
@@ -839,7 +1025,7 @@ function beginAutoPilot(section, announceSelection = false) {
   dockCandidate = section;
   autopilotTarget.copy(getSectionPosition(section)).add(new THREE.Vector3(-7.2 * sceneScaleFactor, 0.2, 0));
   isAutoPiloting = true;
-  setContent(section, announceSelection ? `Autopilot engaged for ${section.title}. The rocket is aligning for approach.` : null);
+  setContent(null);
   updateStatus(`Autopilot set for ${section.title}`);
 }
 
@@ -877,8 +1063,12 @@ function updateDockCandidate() {
 
     planetGroup.rotation.y += 0.0015 + index * 0.00025;
     planetGroup.userData.glow.material.opacity = distance < undockRadius ? 0.22 + pulse : 0.1 + pulse * 0.35;
+    if (planetGroup.userData.corona) {
+      planetGroup.userData.corona.material.opacity = distance < undockRadius ? 0.18 + pulse * 0.2 : 0.1 + pulse * 0.14;
+      planetGroup.userData.corona.scale.setScalar(1 + pulse * 0.08);
+    }
     if (planetGroup.userData.ring) {
-      planetGroup.userData.ring.material.opacity = distance < undockRadius ? 0.78 : 0.46;
+      planetGroup.userData.ring.material.opacity = distance < undockRadius ? 1.0 : 0.85;
     }
 
     if (distance < nearestDistance) {
@@ -891,11 +1081,11 @@ function updateDockCandidate() {
 
   if (activeSection && activeSection.id === nearest?.id && nearestDistance > undockRadius * sceneScaleFactor) {
     undockFrom(activeSection);
-  } else if (!activeSection && nearest && nearestDistance < dockRadius * sceneScaleFactor) {
+  } else if (!activeSection && !isAutoPiloting && nearest && nearestDistance < dockRadius * sceneScaleFactor) {
     dockWith(nearest);
   } else if (activeSection && dockCandidate?.id === activeSection.id && nearestDistance < dockRadius * sceneScaleFactor) {
     updateStatus(`Docked at ${activeSection.title}`);
-  } else if (dockCandidate && !isMobileMode() && !activeSection) {
+  } else if (dockCandidate && !isMobileMode() && !activeSection && !isAutoPiloting) {
     updateStatus(`Approaching ${dockCandidate.title}. Auto-docking when close enough.`);
   } else if (!activeSection && !isAutoPiloting) {
     updateStatus("Cruising open space");
@@ -1279,4 +1469,3 @@ function tick(now) {
 setContent(null);
 resize();
 requestAnimationFrame(tick);
-
