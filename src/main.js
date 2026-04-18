@@ -1,4 +1,8 @@
 import * as THREE from "three";
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import "./styles.css";
 
 const sections = [
@@ -21,7 +25,7 @@ const sections = [
       "Some Stuff I've built.",
     funFact: "Earth's rotation is gradually slowing down at a rate of 17 milliseconds per hundred years.",
     color: "#6cb7ff",
-    position: new THREE.Vector3(-28, 2, -24),
+    position: new THREE.Vector3(-52, 2, -28),
     facts: [
       [
         "311 Forecasting System",
@@ -57,7 +61,7 @@ const sections = [
       "A battle-tested technical arsenal across full-stack engineering, cloud infrastructure, and AI integration. Specialized in transforming complex requirements into high-performance, scalable systems.",
     funFact: "Mars is home to Olympus Mons, the tallest planetary mountain in the solar system, standing three times higher than Mount Everest.",
     color: "#d96f43",
-    position: new THREE.Vector3(24, -2, -12),
+    position: new THREE.Vector3(82, -2, -45),
     facts: [
       ["Languages", "Python, JavaScript, TypeScript, Java, C#, SQL, Bash, HTML, CSS"],
       ["Frameworks & Libraries", "React, Angular, Node, Spring Boot, .NET, Express, Django, FastAPI, LangChain, Redux, Cypress"],
@@ -73,7 +77,7 @@ const sections = [
       "Highlights from my internships.",
     funFact: "Jupiter has the shortest day of any planet, rotating completely on its axis in less than 10 hours.",
     color: "#d9b38c",
-    position: new THREE.Vector3(20, 1, 28),
+    position: new THREE.Vector3(170, 1, 110),
     facts: [
       ["Ericsson PLMS", "Incoming Full Stack Developer Intern", "Tech Stack: Java, Spring Boot, Angular, TypeScript, Kubernetes"],
       ["Ericsson OEM", "Web Developer Intern", "Shipped a LangChain RAG chatbot serving 4,000+ internal users and slashed React feature load times by 62%."],
@@ -90,7 +94,7 @@ const sections = [
       "Feel free to reach out if you'd like to chat about opportunities, experience, resume or anything else!",
     funFact: "Saturn's beautiful rings are incredibly thin—spanning up to 282,000 kilometers across, but only about 10 meters thick.",
     color: "#e6d28a",
-    position: new THREE.Vector3(-10, -5, 24),
+    position: new THREE.Vector3(-240, -5, 150),
     facts: [
       ["Email", "pratham.sitoula03@gmail.com"],
     ],
@@ -154,6 +158,111 @@ function createVoyagerModel(name) {
   return group;
 }
 
+function createAsteroidBelt() {
+  const count = 3500;
+  const geom = new THREE.IcosahedronGeometry(1.0, 0); // Flat-shaded rocks
+  const mat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.9, flatShading: true });
+  const mesh = new THREE.InstancedMesh(geom, mat, count);
+  
+  const matrix = new THREE.Matrix4();
+  const position = new THREE.Vector3();
+  const rotation = new THREE.Euler();
+  const scale = new THREE.Vector3();
+
+  for (let i = 0; i < count; i++) {
+    // Toroidal distribution
+    const radius = THREE.MathUtils.randFloat(115, 150);
+    const angle = Math.random() * Math.PI * 2;
+    const yShift = THREE.MathUtils.randFloatSpread(24);
+    
+    position.set(Math.cos(angle) * radius, yShift, Math.sin(angle) * radius);
+    rotation.set(Math.random(), Math.random(), Math.random());
+    const s = Math.random() * 0.8 + 0.2;
+    scale.set(s, s, s);
+    
+    matrix.compose(position, new THREE.Quaternion().setFromEuler(rotation), scale);
+    mesh.setMatrixAt(i, matrix);
+  }
+  
+  return mesh;
+}
+
+/* --- Sound Engine (Synthesized) --- */
+const SoundEngine = {
+  ctx: null,
+  hum: null,
+  gain: null,
+  init() {
+    if (this.ctx) return;
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Ambient Deep Space Hum
+    this.hum = this.ctx.createOscillator();
+    this.hum.type = 'sine';
+    this.hum.frequency.setValueAtTime(45, this.ctx.currentTime);
+    
+    this.gain = this.ctx.createGain();
+    this.gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+    
+    this.hum.connect(this.gain);
+    this.gain.connect(this.ctx.destination);
+    this.hum.start();
+  },
+  playWhoosh(intensity) {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1, this.ctx.currentTime + 1.2);
+    g.gain.setValueAtTime(intensity * 0.1, this.ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 1.2);
+    osc.connect(g);
+    g.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 1.2);
+  }
+};
+
+window.addEventListener('mousedown', () => SoundEngine.init(), { once: true });
+window.addEventListener('keydown', () => SoundEngine.init(), { once: true });
+
+/* --- Comet Easter Egg --- */
+function createComet() {
+  const group = new THREE.Group();
+  const core = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(0.5, 2),
+    new THREE.MeshBasicMaterial({ color: 0xccfcff })
+  );
+  group.add(core);
+
+  const particleCount = 200;
+  const positions = new Float32Array(particleCount * 3);
+  const particleGeometry = new THREE.BufferGeometry();
+  particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  
+  const particleMaterial = new THREE.PointsMaterial({
+    color: 0x88ccff,
+    size: 0.15,
+    transparent: true,
+    opacity: 0.6,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  
+  const particles = new THREE.Points(particleGeometry, particleMaterial);
+  group.add(particles);
+
+  group.userData = {
+    positions,
+    isActive: false,
+    velocity: new THREE.Vector3(),
+    spawnTimer: 0
+  };
+  
+  return group;
+}
+
 const LAYOUT_PRESETS = {
   desktop: {
     scale: 1,
@@ -162,10 +271,10 @@ const LAYOUT_PRESETS = {
     chaseHeight: 8.0,
     positions: {
       about: new THREE.Vector3(0, 0, 0),
-      projects: new THREE.Vector3(-42, 2, -36),
-      skills: new THREE.Vector3(36, -2, -18),
-      experience: new THREE.Vector3(30, 1, 42),
-      contact: new THREE.Vector3(-15, -5, 36),
+      projects: new THREE.Vector3(-52, 2, -28),
+      skills: new THREE.Vector3(82, -2, -45),
+      experience: new THREE.Vector3(170, 1, 110),
+      contact: new THREE.Vector3(-240, -5, 150),
     },
   },
   tablet: {
@@ -175,10 +284,10 @@ const LAYOUT_PRESETS = {
     chaseHeight: 9.5,
     positions: {
       about: new THREE.Vector3(0, 0, 0),
-      projects: new THREE.Vector3(-38, 2, -30),
-      skills: new THREE.Vector3(30, -2, -14),
-      experience: new THREE.Vector3(24, 1, 34),
-      contact: new THREE.Vector3(-15, -5, 30),
+      projects: new THREE.Vector3(-52, 2, -28),
+      skills: new THREE.Vector3(82, -2, -45),
+      experience: new THREE.Vector3(170, 1, 110),
+      contact: new THREE.Vector3(-240, -5, 150),
     },
   },
   mobile: {
@@ -188,10 +297,10 @@ const LAYOUT_PRESETS = {
     chaseHeight: 12.0,
     positions: {
       about: new THREE.Vector3(0, 0, 0),
-      projects: new THREE.Vector3(-26, 3, -14),
-      skills: new THREE.Vector3(20, -2, -9),
-      experience: new THREE.Vector3(15, 2, 18),
-      contact: new THREE.Vector3(-15, -4, 15),
+      projects: new THREE.Vector3(-52, 2, -28),
+      skills: new THREE.Vector3(82, -2, -45),
+      experience: new THREE.Vector3(170, 1, 110),
+      contact: new THREE.Vector3(-240, -5, 150),
     },
   },
 };
@@ -211,13 +320,27 @@ const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 const yAxis = new THREE.Vector3(0, 1, 0);
 const boosterFlames = [];
+const cameraLookOffset = new THREE.Vector3(0, 1.15, 0);
+const movementBoundsMin = new THREE.Vector3(-450, -150, -450);
+const movementBoundsMax = new THREE.Vector3(450, 150, 450);
+const asteroidLabelWorldPosition = new THREE.Vector3();
+const trailCamUp = new THREE.Vector3(0, 1, 0);
+const trailSegmentDirection = new THREE.Vector3();
+const trailPerpendicular = new THREE.Vector3();
+const smokeBackDirection = new THREE.Vector3();
+const cinematicNearPosition = new THREE.Vector3();
+const cinematicFarPosition = new THREE.Vector3(0, 8, 400);
+const slingshotPull = new THREE.Vector3();
+const voyagerWorldPosition = new THREE.Vector3();
+const voyagerProjectedPosition = new THREE.Vector3();
+const voyagerFrustum = new THREE.Frustum();
+const voyagerFrustumMatrix = new THREE.Matrix4();
 
 const renderer = new THREE.WebGLRenderer({
   canvas,
   antialias: true,
   alpha: true,
 });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight, false);
 
 let isLoaded = false;
@@ -244,6 +367,13 @@ loadingManager.onLoad = () => {
 
 const scene = new THREE.Scene();
 const textureLoader = new THREE.TextureLoader(loadingManager);
+
+const asteroidBelt = createAsteroidBelt();
+scene.add(asteroidBelt);
+
+const comet = createComet();
+scene.add(comet);
+comet.position.set(0, 500, 0);
 
 const voyagerStartDist1 = 24430150000; // Approx km for V1
 const voyagerStartDist2 = 20385920000; // Approx km for V2
@@ -282,14 +412,14 @@ function createDeepSpaceLabel(name, fact) {
 }
 
 const voyager1 = createVoyagerModel("Voyager 1");
-voyager1.position.set(160, 40, -180);
+voyager1.position.set(240, 80, -280);
 voyager1.rotation.set(0.5, 0.2, 0.1);
 const voyager1Label = createDeepSpaceLabel("Voyager 1", "24.4 Billion km");
 voyager1.userData.label = voyager1Label;
 scene.add(voyager1);
 
 const voyager2 = createVoyagerModel("Voyager 2");
-voyager2.position.set(-180, -30, 140);
+voyager2.position.set(-320, -60, 280);
 voyager2.rotation.set(-0.3, 0.5, -0.4);
 const voyager2Label = createDeepSpaceLabel("Voyager 2", "20.3 Billion km");
 voyager2.userData.label = voyager2Label;
@@ -308,6 +438,23 @@ scene.add(keyLight);
 const rimLight = new THREE.PointLight(0x8cc8ff, 25, 120, 2);
 rimLight.position.set(-22, 8, -10);
 scene.add(rimLight);
+
+// --- Post Processing (Bloom) ---
+const renderScene = new RenderPass(scene, camera);
+
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight),
+  0.65, // strength
+  0.4,  // radius
+  0.85  // threshold
+);
+
+const outputPass = new OutputPass();
+
+const composer = new EffectComposer(renderer);
+composer.addPass(renderScene);
+composer.addPass(bloomPass);
+composer.addPass(outputPass);
 
 const starGeometry = new THREE.BufferGeometry();
 const starCount = 3000;
@@ -635,6 +782,11 @@ let currentLayout = LAYOUT_PRESETS.desktop;
 let activeSection = null;
 let dockCandidate = null;
 let isAutoPiloting = false;
+let usePostProcessing = true;
+let lastStatusText = "";
+let lastHudSyncTime = -Infinity;
+
+const HUD_SYNC_INTERVAL_MS = 125;
 
 const keyboard = new Set();
 const planets = [];
@@ -1269,7 +1421,7 @@ function setContent(section, customText) {
           } else {
             svg = `<svg style="width:1.15em; height:1.15em;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`;
           }
-          return `<a href="${url}" target="_blank" title="${key}" style="color: var(--cyan); text-decoration: none; transition: color 0.15s, transform 0.15s; display: inline-flex; align-items: center;" onmouseover="this.style.color='#fff'; this.style.transform='scale(1.1)';" onmouseout="this.style.color='var(--cyan)'; this.style.transform='scale(1)';">${svg}</a>`;
+          return `<a href="${url}" target="_blank" rel="noopener noreferrer" title="${key}" style="color: var(--cyan); text-decoration: none; transition: color 0.15s, transform 0.15s; display: inline-flex; align-items: center;" onmouseover="this.style.color='#fff'; this.style.transform='scale(1.1)';" onmouseout="this.style.color='var(--cyan)'; this.style.transform='scale(1)';">${svg}</a>`;
         })
         .join('');
 
@@ -1299,6 +1451,7 @@ function setContent(section, customText) {
       const a = document.createElement("a");
       a.href = link.url;
       a.target = "_blank";
+      a.rel = "noopener noreferrer";
       a.className = "social-icon";
       if (link.type === "linkedin") {
         a.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>`;
@@ -1312,13 +1465,18 @@ function setContent(section, customText) {
 }
 
 function updateStatus(text) {
+  if (text === lastStatusText) {
+    return;
+  }
+  lastStatusText = text;
   statusPill.textContent = text;
 }
 
-function beginAutoPilot(section, announceSelection = false) {
-  dockCandidate = section;
-  autopilotTarget.copy(getSectionPosition(section)).add(new THREE.Vector3(-7.2 * sceneScaleFactor, 0.2, 0));
+function beginAutoPilot(section, isManualTrigger = false) {
+  if (!section) return;
+  autopilotTarget.copy(getSectionPosition(section));
   isAutoPiloting = true;
+  activeSection = null;
   setContent(null);
   updateStatus(`Autopilot set for ${section.title}`);
 }
@@ -1377,12 +1535,11 @@ function updateDockCandidate() {
       ast.mesh.rotation.y += 0.005;
 
       if (distance < undockRadius + 18) {
-        const vector = new THREE.Vector3();
-        ast.mesh.getWorldPosition(vector);
-        vector.project(camera);
+        ast.mesh.getWorldPosition(asteroidLabelWorldPosition);
+        asteroidLabelWorldPosition.project(camera);
 
-        const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-        const y = -(vector.y * 0.5 - 0.5) * window.innerHeight;
+        const x = (asteroidLabelWorldPosition.x * 0.5 + 0.5) * window.innerWidth;
+        const y = -(asteroidLabelWorldPosition.y * 0.5 - 0.5) * window.innerHeight;
 
         ast.label.style.left = `${x}px`;
         ast.label.style.top = `${y}px`;
@@ -1415,9 +1572,9 @@ function updateDockCandidate() {
 
 function handleDesktopMovement(delta) {
   const yawRate = 2.4 * delta;
-  const thrust = keyboard.has("Shift") ? 14.0 : 6.5;
+  const thrust = keyboard.has("Shift") ? 24.0 : 12.0;
   const drag = 0.92;
-  const liftSpeed = keyboard.has("Shift") ? 12.0 : 7.0;
+  const liftSpeed = keyboard.has("Shift") ? 18.0 : 10.0;
 
   if (keyboard.has("ArrowLeft") || keyboard.has("a") || keyboard.has("4")) {
     rocket.rotation.y -= yawRate;
@@ -1465,7 +1622,7 @@ function handleDesktopMovement(delta) {
 
   rocketVelocity.multiplyScalar(drag);
   rocket.position.add(rocketVelocity);
-  rocket.position.clamp(new THREE.Vector3(-150, -60, -150), new THREE.Vector3(150, 60, 150));
+  rocket.position.clamp(movementBoundsMin, movementBoundsMax);
 
   flame.scale.setScalar(0.9 + Math.min(rocketVelocity.length() * 0.22, 0.95));
   flame.material.opacity = 0.55 + Math.min(rocketVelocity.length() * 0.16, 0.35);
@@ -1481,7 +1638,7 @@ function handleAutoPilot(delta) {
   }
 
   const direction = tempDirection.normalize();
-  rocket.position.add(direction.multiplyScalar(Math.min(distance, delta * 7.2)));
+  rocket.position.add(direction.multiplyScalar(Math.min(distance, delta * 45.0)));
 
   const yaw = Math.atan2(direction.z, direction.x);
 
@@ -1508,10 +1665,6 @@ function updateTrail() {
   trailPoints[0].lerp(trailAnchor, 0.34 + speed * 0.2);
 
   /* ── Ribbon geometry ── */
-  const camRight = new THREE.Vector3();
-  const camUp = new THREE.Vector3(0, 1, 0);
-  const segDir = new THREE.Vector3();
-  const perp = new THREE.Vector3();
   const pulse = performance.now() * 0.03;
 
   for (let i = 0; i < ribbonSegments; i++) {
@@ -1521,17 +1674,17 @@ function updateTrail() {
     const width = Math.max(baseWidth + turbulence, 0);
 
     if (i < ribbonSegments - 1) {
-      segDir.copy(trailPoints[i + 1]).sub(trailPoints[i]).normalize();
+      trailSegmentDirection.copy(trailPoints[i + 1]).sub(trailPoints[i]).normalize();
     }
-    perp.crossVectors(segDir, camUp).normalize().multiplyScalar(width);
+    trailPerpendicular.crossVectors(trailSegmentDirection, trailCamUp).normalize().multiplyScalar(width);
 
     const vi = i * 6;
-    ribbonPositions[vi] = trailPoints[i].x + perp.x;
-    ribbonPositions[vi + 1] = trailPoints[i].y + perp.y;
-    ribbonPositions[vi + 2] = trailPoints[i].z + perp.z;
-    ribbonPositions[vi + 3] = trailPoints[i].x - perp.x;
-    ribbonPositions[vi + 4] = trailPoints[i].y - perp.y;
-    ribbonPositions[vi + 5] = trailPoints[i].z - perp.z;
+    ribbonPositions[vi] = trailPoints[i].x + trailPerpendicular.x;
+    ribbonPositions[vi + 1] = trailPoints[i].y + trailPerpendicular.y;
+    ribbonPositions[vi + 2] = trailPoints[i].z + trailPerpendicular.z;
+    ribbonPositions[vi + 3] = trailPoints[i].x - trailPerpendicular.x;
+    ribbonPositions[vi + 4] = trailPoints[i].y - trailPerpendicular.y;
+    ribbonPositions[vi + 5] = trailPoints[i].z - trailPerpendicular.z;
 
     const ci = i * 8;
     const alpha = (1 - t * t) * (0.25 + speed * 0.55);
@@ -1563,8 +1716,8 @@ function updateTrail() {
       inactive.life = 0;
       inactive.maxLife = 1.2 + Math.random() * 1.2;
       inactive.sprite.position.copy(trailAnchor);
-      const backDir = new THREE.Vector3(-1, 0, 0).applyAxisAngle(yAxis, rocket.rotation.y);
-      inactive.velocity.copy(backDir).multiplyScalar(1.5 + speed * 2.5);
+      smokeBackDirection.set(-1, 0, 0).applyAxisAngle(yAxis, rocket.rotation.y);
+      inactive.velocity.copy(smokeBackDirection).multiplyScalar(1.5 + speed * 2.5);
       inactive.velocity.x += (Math.random() - 0.5) * 0.8;
       inactive.velocity.y += (Math.random() - 0.5) * 0.6;
       inactive.velocity.z += (Math.random() - 0.5) * 0.8;
@@ -1633,8 +1786,104 @@ function updateCamera() {
 
   horizontalForward.set(1, 0, 0);
   horizontalForward.applyAxisAngle(yAxis, rocket.rotation.y);
-  cameraLookTarget.copy(rocket.position).add(new THREE.Vector3(0, 1.15, 0)).add(horizontalForward.multiplyScalar(6.2));
+  cameraLookTarget.copy(rocket.position).add(cameraLookOffset).add(horizontalForward.multiplyScalar(6.2));
   camera.lookAt(cameraLookTarget);
+}
+
+function syncHud(now) {
+  if (now - lastHudSyncTime < HUD_SYNC_INTERVAL_MS) {
+    return;
+  }
+
+  lastHudSyncTime = now;
+
+  const elapsed = now - missionStartTime;
+  const dist1 = (voyagerStartDist1 + elapsed * voyagerSpeed1).toLocaleString();
+  const dist2 = (voyagerStartDist2 + elapsed * voyagerSpeed2).toLocaleString();
+  const voyager1DistanceText = `Distance from Earth: ${dist1} km`;
+  const voyager2DistanceText = `Distance from Earth: ${dist2} km`;
+  const voyager1Span = voyager1.userData.label.querySelector("span");
+  const voyager2Span = voyager2.userData.label.querySelector("span");
+
+  if (voyager1Span && voyager1Span.textContent !== voyager1DistanceText) {
+    voyager1Span.textContent = voyager1DistanceText;
+  }
+  if (voyager2Span && voyager2Span.textContent !== voyager2DistanceText) {
+    voyager2Span.textContent = voyager2DistanceText;
+  }
+
+  voyagerFrustum.setFromProjectionMatrix(
+    voyagerFrustumMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse),
+  );
+
+  [voyager1, voyager2].forEach((voyager) => {
+    const label = voyager.userData.label;
+    const arrow = label.querySelector(".offscreen-arrow");
+    const tether = label.querySelector(".hud-tether");
+    const distToRocket = voyager.position.distanceTo(rocket.position);
+
+    if (distToRocket > 200) {
+      label.style.opacity = "0";
+      return;
+    }
+
+    voyager.getWorldPosition(voyagerWorldPosition);
+
+    if (voyagerFrustum.containsPoint(voyagerWorldPosition)) {
+      voyagerProjectedPosition.copy(voyagerWorldPosition).project(camera);
+      const x = (voyagerProjectedPosition.x * 0.5 + 0.5) * window.innerWidth;
+      const y = -(voyagerProjectedPosition.y * 0.5 - 0.5) * window.innerHeight;
+
+      label.style.left = `${x + 60}px`;
+      label.style.top = `${y}px`;
+      label.style.transform = "translateY(-50%)";
+      label.style.opacity = Math.hypot(voyagerProjectedPosition.x, voyagerProjectedPosition.y) < 0.4 ? "1" : "0.4";
+
+      if (tether) {
+        tether.style.display = "block";
+      }
+      if (arrow) {
+        arrow.style.display = "none";
+      }
+      return;
+    }
+
+    voyagerProjectedPosition.copy(voyagerWorldPosition).project(camera);
+    const margin = 120;
+    const x = Math.max(
+      margin,
+      Math.min(window.innerWidth - margin, (voyagerProjectedPosition.x * 0.5 + 0.5) * window.innerWidth),
+    );
+    const y = Math.max(
+      margin,
+      Math.min(window.innerHeight - margin, -(voyagerProjectedPosition.y * 0.5 - 0.5) * window.innerHeight),
+    );
+
+    label.style.left = `${x}px`;
+    label.style.top = `${y}px`;
+    label.style.opacity = "1";
+
+    if (arrow) {
+      arrow.style.display = "block";
+      arrow.style.transform = `translateY(-50%) rotate(${Math.atan2(y - window.innerHeight / 2, x - window.innerWidth / 2)}rad)`;
+    }
+    if (tether) {
+      tether.style.display = "none";
+    }
+  });
+}
+
+function updateRenderQuality(width, height) {
+  const isReducedQuality = pointerQuery.matches || currentLayout !== LAYOUT_PRESETS.desktop;
+  const pixelRatioCap = isReducedQuality ? 1.25 : 2;
+
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap));
+  usePostProcessing = !isReducedQuality;
+  bloomPass.enabled = usePostProcessing;
+
+  if (usePostProcessing) {
+    composer.setSize(width, height);
+  }
 }
 
 function adjustZoom(direction) {
@@ -1649,6 +1898,7 @@ function resize() {
   camera.fov = currentLayout.fov;
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
+  updateRenderQuality(width, height);
   renderer.setSize(width, height, false);
 }
 
@@ -1659,7 +1909,7 @@ mobileQuery.addEventListener("change", resize);
 window.addEventListener("keydown", (event) => {
   const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
 
-  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " ", "Tab"].includes(event.key)) {
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) {
     event.preventDefault();
   }
 
@@ -1715,6 +1965,11 @@ let isDragging = false;
 let isPointerDown = false;
 const dragThreshold = 8;
 
+function resetPointerState() {
+  isPointerDown = false;
+  isDragging = false;
+}
+
 canvas.addEventListener("pointerdown", (event) => {
   dragStartX = event.clientX;
   dragStartY = event.clientY;
@@ -1740,11 +1995,12 @@ canvas.addEventListener("pointermove", (event) => {
 });
 
 canvas.addEventListener("pointerup", (event) => {
-  isPointerDown = false;
   if (isDragging) {
-    isDragging = false;
+    resetPointerState();
     return;
   }
+
+  resetPointerState();
 
   const rect = canvas.getBoundingClientRect();
   pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -1761,6 +2017,9 @@ canvas.addEventListener("pointerup", (event) => {
     beginAutoPilot(section, true);
   }
 });
+
+canvas.addEventListener("pointercancel", resetPointerState);
+canvas.addEventListener("pointerleave", resetPointerState);
 
 zoomInButton.addEventListener("click", () => adjustZoom(-1));
 zoomOutButton.addEventListener("click", () => adjustZoom(1));
@@ -1792,10 +2051,13 @@ function tick(now) {
 
   // Execute Cinematic Warp override over the standard updateCamera lerp
   if (cinematicFadeValue > 0) {
-    cinematicFadeValue -= delta * 0.45; // Approximately 2.2 seconds to smoothly dissipate
+    cinematicFadeValue -= delta * 0.45; 
     const warpProgress = Math.max(0, cinematicFadeValue);
-    const easeProgress = warpProgress * warpProgress; // Quadratic ease-out interpolation mapping
-    camera.position.lerpVectors(camera.position, new THREE.Vector3(0, 8, 400), easeProgress);
+    const easeProgress = warpProgress * warpProgress; 
+    
+    // Lerp from Deep Space (400) to Sun Level (25)
+    cinematicNearPosition.set(0, 8, 25 * sceneScaleFactor);
+    camera.position.lerpVectors(cinematicNearPosition, cinematicFarPosition, easeProgress);
   }
 
   voyager1.rotation.y += 0.0005;
@@ -1803,71 +2065,77 @@ function tick(now) {
   voyager2.rotation.y += 0.0004;
   voyager2.rotation.x += 0.0003;
 
-  // Live Distance Calculation
-  const elapsed = now - missionStartTime;
-  const dist1 = (voyagerStartDist1 + elapsed * voyagerSpeed1).toLocaleString();
-  const dist2 = (voyagerStartDist2 + elapsed * voyagerSpeed2).toLocaleString();
-  
-  const v1Content = document.getElementById('label-voyager1');
-  const v2Content = document.getElementById('label-voyager2');
-  if (v1Content) v1Content.querySelector('span').textContent = `Distance from Earth: ${dist1} km`;
-  if (v2Content) v2Content.querySelector('span').textContent = `Distance from Earth: ${dist2} km`;
+  asteroidBelt.rotation.y += 0.00015; // Subtle orbital drift for the entire belt
 
-  // Project Voyager labels
-  [voyager1, voyager2].forEach(v => {
-    const vector = new THREE.Vector3();
-    v.getWorldPosition(vector);
-    
-    // Check if behind camera
-    const frustum = new THREE.Frustum();
-    frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
-    const label = v.userData.label;
-    const arrow = label.querySelector('.offscreen-arrow');
+  // --- Comet Logic ---
+  comet.userData.spawnTimer += delta;
+  if (!comet.userData.isActive && comet.userData.spawnTimer > 45) { // Every 45 seconds
+      comet.userData.isActive = true;
+      comet.userData.spawnTimer = 0;
+      const startSide = Math.random() > 0.5 ? 1 : -1;
+      comet.position.set(startSide * 200, THREE.MathUtils.randFloat(-50, 50), -200);
+      comet.userData.velocity.set(-startSide * 60, 0, 40); // Fast transit
+  }
 
-    if (frustum.containsPoint(vector)) {
-      vector.project(camera);
-      const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-      const y = -(vector.y * 0.5 - 0.5) * window.innerHeight;
+  if (comet.userData.isActive) {
+      comet.position.addScaledVector(comet.userData.velocity, delta);
       
-      label.style.left = `${x + 60}px`; // Offset to the right of the probe
-      label.style.top = `${y}px`;
-      label.style.transform = 'translateY(-50%)';
-      
-      // Update tether length/rotation (very simplified visual)
-      const tether = label.querySelector('.hud-tether');
-      if (tether) tether.style.display = 'block';
+      const positions = comet.userData.positions;
+      for (let i = 0; i < 200; i++) {
+          const idx = i * 3;
+          // Slowly drift old particles back
+          positions[idx] -= (comet.userData.velocity.x * 0.05) + Math.random() * 0.1;
+          positions[idx + 1] += Math.random() * 0.1 - 0.05;
+          positions[idx + 2] -= (comet.userData.velocity.z * 0.05) + Math.random() * 0.1;
+          
+          // Reset particles near core occasionally
+          if (Math.abs(positions[idx]) > 15) {
+              positions[idx] = 0;
+              positions[idx + 1] = 0;
+              positions[idx + 2] = 0;
+          }
+      }
+      comet.children[1].geometry.attributes.position.needsUpdate = true;
 
-      arrow.style.display = 'none';
-      
-      const screenDist = Math.hypot(vector.x, vector.y);
-      label.style.opacity = screenDist < 0.4 ? '1' : '0.4';
-    } else {
-      // Off-screen guide!
-      const vectorClamped = vector.clone().project(camera);
-      label.style.opacity = '1';
-      arrow.style.display = 'block';
-      
-      // Keep label at screen edges
-      const margin = 120;
-      const x = Math.max(margin, Math.min(window.innerWidth - margin, (vectorClamped.x * 0.5 + 0.5) * window.innerWidth));
-      const y = Math.max(margin, Math.min(window.innerHeight - margin, -(vectorClamped.y * 0.5 - 0.5) * window.innerHeight));
-      
-      label.style.left = `${x}px`;
-      label.style.top = `${y}px`;
-      
-      const angle = Math.atan2(y - window.innerHeight/2, x - window.innerWidth/2);
-      arrow.style.transform = `translateY(-50%) rotate(${angle}rad)`;
+      if (comet.position.z > 200) {
+          comet.userData.isActive = false;
+          comet.position.y = 500; // Reset
+      }
+  }
 
-      const tether = label.querySelector('.hud-tether');
-      if (tether) tether.style.display = 'none';
+  // --- HUD Sway Logic ---
+  // (Removed per user request)
+
+  // --- Proximity "Whoosh" & Gravity Slingshot ---
+  planets.forEach(p => {
+    const dist = rocket.position.distanceTo(p.position);
+    if (dist < 15 && !isAutoPiloting && rocketVelocity.length() > 0.1) {
+       // Slingshot: Add a slight pull vector
+       slingshotPull.copy(p.position).sub(rocket.position).normalize().multiplyScalar(0.005);
+       rocketVelocity.add(slingshotPull);
+       
+       // Play whoosh occasionally
+       if (Math.random() < 0.01) SoundEngine.playWhoosh(1.0 - (dist / 15));
     }
   });
 
   updateTrail();
-  renderer.render(scene, camera);
+  syncHud(now);
+  if (usePostProcessing) {
+    composer.render();
+  } else {
+    renderer.render(scene, camera);
+  }
   requestAnimationFrame(tick);
 }
 
 setContent(null);
 resize();
 requestAnimationFrame(tick);
+
+// Global debug access for the console
+window.comet = comet;
+window.scene = scene;
+window.camera = camera;
+window.rocket = rocket;
+window.planets = planets;

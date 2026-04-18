@@ -306,10 +306,13 @@ body {
     gap: 0;
   }
 
-  /* Canvas fills most of the viewport */
-  .scene-canvas {
+  .container {
     grid-row: 1;
     grid-column: 1;
+  }
+
+  /* Canvas fills most of the viewport */
+  .scene-canvas {
     position: relative;
     inset: auto;
     width: 100%;
@@ -382,6 +385,11 @@ body {
   .info-card {
     padding: 0.85rem;
     border-radius: 1rem;
+  }
+
+  .glass {
+    backdrop-filter: none;
+    background: rgba(8, 17, 27, 0.88);
   }
 
   .desktop-copy {
