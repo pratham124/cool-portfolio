@@ -3165,10 +3165,8 @@ function updateRenderQuality(width, height) {
     width >= 1100 &&
     height >= 700;
   
-  // Allow mobile to use up to 2.0 pixel ratio to fix blurriness
-  const pixelRatioCap = Math.min(window.devicePixelRatio, 2);
-
-  renderer.setPixelRatio(pixelRatioCap);
+  // Uncapped pixel ratio for maximum sharpness on modern high-DPI displays (like 3.0 on flagship phones)
+  renderer.setPixelRatio(window.devicePixelRatio);
   usePostProcessing = isDesktopQuality;
   bloomPass.enabled = usePostProcessing;
   asteroidBelt.count = getTargetAsteroidCount();
