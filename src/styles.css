@@ -1,0 +1,377 @@
+:root {
+  --bg-top: #041421;
+  --bg-bottom: #01050d;
+  --panel: rgba(8, 17, 27, 0.68);
+  --panel-border: rgba(158, 226, 255, 0.22);
+  --text: #f4f8ff;
+  --muted: #abc6d9;
+  --cyan: #82f3ff;
+  --gold: #ffd67b;
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top, rgba(24, 59, 92, 0.55), transparent 34%),
+    linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+  color: var(--text);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+body::before {
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.85) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 75% 25%, rgba(130, 243, 255, 0.9) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 30% 70%, rgba(255, 214, 123, 0.75) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 80% 82%, rgba(255, 255, 255, 0.6) 0 1px, transparent 1.2px);
+  opacity: 0.45;
+}
+
+body::after {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(130, 243, 255, 0.12), transparent 18%),
+    radial-gradient(circle at 85% 30%, rgba(255, 143, 143, 0.1), transparent 20%),
+    radial-gradient(circle at 60% 85%, rgba(255, 214, 123, 0.08), transparent 20%);
+  filter: blur(32px);
+}
+
+body {
+  min-width: 320px;
+}
+
+.app-shell {
+  position: relative;
+  min-height: 100vh;
+}
+
+.scene-frame {
+  position: fixed;
+  inset: 0;
+  padding: 1rem;
+  display: grid;
+  place-items: center;
+}
+
+.scene-canvas {
+  position: relative;
+  width: min(calc(100vw - 2rem), calc((100vh - 2rem) * 16 / 9));
+  aspect-ratio: 16 / 9;
+  height: auto;
+  display: block;
+  border-radius: 1.6rem;
+  overflow: hidden;
+  border: 1px solid rgba(158, 226, 255, 0.18);
+  box-shadow: var(--shadow);
+  background:
+    radial-gradient(circle at 50% 35%, rgba(16, 38, 61, 0.46), rgba(4, 11, 21, 0.9)),
+    linear-gradient(180deg, rgba(5, 13, 23, 0.96), rgba(2, 7, 14, 0.98));
+}
+
+.hud,
+.info-card,
+.zoom-controls {
+  position: fixed;
+  z-index: 2;
+}
+
+.hud-top {
+  top: 1.25rem;
+  left: 1.25rem;
+  right: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.hud-left {
+  top: 7.5rem;
+  left: 1.25rem;
+  width: min(24rem, calc(100vw - 2.5rem));
+  display: grid;
+  gap: 1rem;
+}
+
+.glass {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(20px);
+}
+
+.brand h1,
+.panel h2,
+.info-card h2 {
+  margin: 0;
+  font-family: "Syne", sans-serif;
+  letter-spacing: -0.04em;
+}
+
+.brand h1 {
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 0.95;
+}
+
+.eyebrow,
+.section-kicker {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.72rem;
+  color: var(--cyan);
+}
+
+.status-pill {
+  padding: 0.8rem 1rem;
+  border-radius: 999px;
+  background: rgba(10, 24, 37, 0.78);
+  border: 1px solid rgba(130, 243, 255, 0.18);
+  font-size: 0.95rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.panel,
+.info-card,
+.zoom-controls {
+  border-radius: 1.4rem;
+}
+
+.panel {
+  padding: 1.15rem 1.15rem 1.2rem;
+}
+
+.panel h2 {
+  margin-bottom: 0.7rem;
+  font-size: 1.15rem;
+}
+
+.panel p,
+.info-card p {
+  margin: 0;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.panel span {
+  color: var(--gold);
+}
+
+.info-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.info-card {
+  right: 1.25rem;
+  bottom: 1.25rem;
+  width: min(34rem, calc(100vw - 2.5rem));
+  padding: 1.25rem;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.info-card.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+}
+
+.info-card h2 {
+  font-size: clamp(1.8rem, 2.8vw, 2.6rem);
+  margin-bottom: 0.65rem;
+}
+
+.info-grid {
+  margin-top: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.info-pill {
+  padding: 0.85rem 0.95rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.info-pill strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.info-pill span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.mobile-copy {
+  display: none;
+}
+
+.zoom-controls {
+  right: 1.25rem;
+  top: 7.5rem;
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.8rem;
+  border-radius: 1.2rem;
+}
+
+.zoom-button {
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid rgba(130, 243, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-size: 1.35rem;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.zoom-button:hover,
+.zoom-button:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(130, 243, 255, 0.42);
+  background: rgba(130, 243, 255, 0.08);
+  outline: none;
+}
+
+@media (max-width: 900px) {
+  body {
+    overflow: auto;
+  }
+
+  html,
+  body {
+    min-height: 100dvh;
+  }
+
+  .hud-top,
+  .hud-left,
+  .info-card {
+    position: relative;
+    inset: auto;
+  }
+
+  .app-shell {
+    min-height: 100vh;
+    padding: 0.85rem;
+    display: grid;
+    gap: 0.85rem;
+    align-content: start;
+  }
+
+  .scene-frame {
+    position: relative;
+    inset: auto;
+    padding: 0;
+    display: block;
+  }
+
+  .scene-canvas {
+    width: 100%;
+    height: min(52vh, 28rem);
+    min-height: 18rem;
+    border-radius: 1.25rem;
+    aspect-ratio: auto;
+  }
+
+  .hud-top {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .hud-left,
+  .info-card {
+    width: auto;
+  }
+
+  .brand h1 {
+    font-size: clamp(1.7rem, 8vw, 2.8rem);
+  }
+
+  .panel,
+  .info-card {
+    padding: 1rem;
+    border-radius: 1.1rem;
+  }
+
+  .desktop-copy {
+    display: none;
+  }
+
+  .mobile-copy {
+    display: grid;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .status-pill {
+    white-space: normal;
+    font-size: 0.88rem;
+  }
+
+  .info-card.is-hidden {
+    display: none;
+  }
+
+  .zoom-controls {
+    position: fixed;
+    right: 0.85rem;
+    bottom: max(0.85rem, env(safe-area-inset-bottom));
+    top: auto;
+    z-index: 3;
+    grid-auto-flow: column;
+    padding: 0.55rem;
+    gap: 0.5rem;
+  }
+
+  .zoom-button {
+    width: 2.7rem;
+    height: 2.7rem;
+    font-size: 1.15rem;
+  }
+}
+
+@media (max-width: 540px) {
+  .app-shell {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .scene-canvas {
+    height: min(46vh, 22rem);
+    min-height: 16rem;
+  }
+
+  .panel h2,
+  .info-card h2 {
+    font-size: 1.05rem;
+  }
+
+  .panel p,
+  .info-card p,
+  .info-pill span {
+    font-size: 0.9rem;
+  }
+}
