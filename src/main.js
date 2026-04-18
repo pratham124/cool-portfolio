@@ -7,44 +7,41 @@ const sections = [
     title: "Earth",
     subtitle: "About Me",
     description:
-      "A quick read on your background, what you build, and the kind of work you want to attract.",
+      "I am a Software Engineering student at the University of Alberta (Expected Graduation 2027) with a proven track record of delivering high-impact solutions across multiple internships. My expertise spans full-stack development, performance optimization, and AI integration, with successful tenures at Ericsson, Pason Systems, and ANC. I specialize in building scalable applications that solve complex problems, from RAG chatbots to 5G network testing automation.",
     color: "#6cb7ff",
     position: new THREE.Vector3(-28, 2, -24),
-    facts: [
-      ["Background", "Designer-minded developer with a bias for motion and storytelling."],
-      ["Current Focus", "Interactive frontends, product polish, and memorable user journeys."],
-      ["Approach", "Build interfaces that read clearly but still feel cinematic."],
-      ["Working Style", "Fast iteration, strong execution, and attention to detail."],
-    ],
+    facts: [],
   },
   {
     id: "skills",
     title: "Mars",
     subtitle: "Skills",
     description:
-      "A technical inventory planet for your stack, process, and the disciplines you bring to a team.",
+      "",
     color: "#d96f43",
     position: new THREE.Vector3(24, -2, -12),
     facts: [
-      ["Frontend", "React, TypeScript, accessible UI, animation systems, performance tuning."],
-      ["Creative Tech", "Three.js scenes, motion design, prototyping, visual direction."],
-      ["Product", "Interaction design, content hierarchy, cross-functional collaboration."],
-      ["Workflow", "Git, testing, code review, rapid iteration, maintainable systems."],
+      ["Languages", "Python, JavaScript, TypeScript, Java, C#, SQL, Bash, HTML, CSS"],
+      ["Frameworks & Libraries", "React, Angular, Node, Spring Boot, .NET, Express, Django, FastAPI, LangChain, Redux, Cypress"],
+      ["Cloud & Tools", "Docker, Kubernetes, Jenkins, Azure, Git, Linux, Claude Code, Jira, Confluence, PowerBI"],
+      ["Education", "B.S. Software Engineering @ University of Alberta (2027)"],
+      ["Soft Skills", "Teamwork, Communication, Problem Solving, Adaptability, Time Management, Leadership"]
     ],
   },
   {
     id: "projects",
     title: "Jupiter",
-    subtitle: "Projects",
+    subtitle: "Experience",
     description:
-      "Feature flagship projects here, each framed as a mission with outcome, stack, and impact.",
+      "Highlights from my internships.",
     color: "#d9b38c",
     position: new THREE.Vector3(20, 1, 28),
     facts: [
-      ["Flagship Build", "Interactive marketing site with immersive 3D transitions and CMS integration."],
-      ["Product App", "Dashboard redesign that simplified complex data workflows and improved clarity."],
-      ["Experiment", "Generative visual playground for motion, shaders, and playful navigation."],
-      ["Impact", "Tie every project to measurable outcomes, not just screenshots."],
+      ["Ericsson PLMS", "Incoming Full Stack Developer Intern", "Tech Stack: Java, Spring Boot, Angular, TypeScript, Kubernetes"],
+      ["Ericsson OEM", "Web Developer Intern", "Shipped a LangChain RAG chatbot serving 4,000+ internal users and slashed React feature load times by 62%."],
+      ["Ericsson Cloud RAN", "Software Developer Intern", "Built a React/FastAPI app cutting 5G test analysis from 2h to 20m and resolved critical Java memory leaks."],
+      ["Pason Systems", "Software Developer Intern", "Optimized a Spring Boot microservice to reduce API latency by 40% and rebuilt Rig Monitoring UI in React."],
+      ["ANC", "Software Engineer Intern", "Saved $100K annually with a .NET/React purchase system and accelerated Azure approval workflows by 22%."],
     ],
   },
   {
@@ -52,14 +49,15 @@ const sections = [
     title: "Saturn",
     subtitle: "Contact",
     description:
-      "A direct landing zone for your email, socials, availability, and a short invitation to collaborate.",
+      "Feel free to reach out if you'd like to chat about opportunities, projects, resume or anything else!",
     color: "#e6d28a",
     position: new THREE.Vector3(-10, -5, 24),
     facts: [
-      ["Email", "you@example.com"],
-      ["LinkedIn", "linkedin.com/in/your-name"],
-      ["GitHub", "github.com/your-name"],
-      ["Availability", "Open to freelance, product design partnerships, and in-house frontend roles."],
+      ["Email", "pratham.sitoula03@gmail.com"],
+    ],
+    links: [
+      { type: "linkedin", url: "https://www.linkedin.com/in/pratham-sitoula/" },
+      { type: "github", url: "https://github.com/pratham124" }
     ],
   },
 ];
@@ -106,7 +104,6 @@ const LAYOUT_PRESETS = {
 const canvas = document.querySelector(".scene-canvas");
 const statusPill = document.getElementById("status-pill");
 const titleEl = document.getElementById("section-title");
-const kickerEl = document.getElementById("section-kicker");
 const descriptionEl = document.getElementById("section-description");
 const pointsEl = document.getElementById("section-points");
 const infoCardEl = document.querySelector(".info-card");
@@ -760,14 +757,12 @@ function setContent(section, customText) {
   infoCardEl.classList.toggle("is-hidden", !section);
 
   if (!section) {
-    kickerEl.textContent = "";
     titleEl.textContent = "";
     descriptionEl.textContent = "";
     pointsEl.innerHTML = "";
     return;
   }
 
-  kickerEl.textContent = section ? section.subtitle : "Portfolio";
   titleEl.textContent = section ? section.subtitle : "Explore the planets";
   descriptionEl.textContent =
     customText ||
@@ -780,18 +775,60 @@ function setContent(section, customText) {
   const items = section
     ? section.facts
     : [
-        ["Desktop", "Use the keypad or keyboard to steer the rocket and change its viewing angle while flying."],
-        ["Mobile", "Tap a planet to engage autopilot, then use the zoom buttons to adjust your distance."],
-        ["Scene", "A 3D universe with textured solar-system planets and a chase camera behind the rocket."],
-        ["Portfolio", "Swap placeholder copy with your real story, projects, and contact links."],
-      ];
+      ["Desktop", "Use the keypad or keyboard to steer the rocket and change its viewing angle while flying."],
+      ["Mobile", "Tap a planet to engage autopilot, then use the zoom buttons to adjust your distance."],
+      ["Scene", "A 3D universe with textured solar-system planets and a chase camera behind the rocket."],
+      ["Portfolio", "Swap placeholder copy with your real story, projects, and contact links."],
+    ];
 
-  items.forEach(([label, value]) => {
+  items.forEach((item) => {
     const pill = document.createElement("article");
     pill.className = "info-pill";
-    pill.innerHTML = `<strong>${label}</strong><span>${value}</span>`;
+    if (items.length === 1) {
+      pill.style.gridColumn = "1 / -1";
+    }
+
+    const label = item[0];
+    let title = null;
+    let value = item[1];
+
+    if (item.length === 3) {
+      title = item[1];
+      value = item[2];
+    }
+
+    let innerHTML = `<strong>${label}</strong>`;
+    if (title) {
+      innerHTML += `<em>${title}</em>`;
+    }
+
+    if (value.includes('@')) {
+      innerHTML += `<span><a href="mailto:${value}" style="color: inherit; text-decoration: none;">${value}</a></span>`;
+    } else {
+      innerHTML += `<span>${value}</span>`;
+    }
+
+    pill.innerHTML = innerHTML;
     pointsEl.appendChild(pill);
   });
+
+  if (section && section.links) {
+    const linksContainer = document.createElement("div");
+    linksContainer.className = "social-links";
+    section.links.forEach((link) => {
+      const a = document.createElement("a");
+      a.href = link.url;
+      a.target = "_blank";
+      a.className = "social-icon";
+      if (link.type === "linkedin") {
+        a.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>`;
+      } else if (link.type === "github") {
+        a.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>`;
+      }
+      linksContainer.appendChild(a);
+    });
+    pointsEl.appendChild(linksContainer);
+  }
 }
 
 function updateStatus(text) {
