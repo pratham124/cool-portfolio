@@ -64,6 +64,45 @@ const sections = [
   },
 ];
 
+const LAYOUT_PRESETS = {
+  desktop: {
+    scale: 1,
+    fov: 58,
+    chaseDistance: 15.5,
+    chaseHeight: 6.2,
+    positions: {
+      about: new THREE.Vector3(-28, 2, -24),
+      skills: new THREE.Vector3(24, -2, -12),
+      projects: new THREE.Vector3(20, 1, 28),
+      contact: new THREE.Vector3(-10, -5, 24),
+    },
+  },
+  tablet: {
+    scale: 0.9,
+    fov: 64,
+    chaseDistance: 18,
+    chaseHeight: 7,
+    positions: {
+      about: new THREE.Vector3(-22, 2, -18),
+      skills: new THREE.Vector3(19, -1, -8),
+      projects: new THREE.Vector3(16, 1, 20),
+      contact: new THREE.Vector3(-8, -4, 18),
+    },
+  },
+  mobile: {
+    scale: 0.78,
+    fov: 68,
+    chaseDistance: 20.5,
+    chaseHeight: 8,
+    positions: {
+      about: new THREE.Vector3(-16, 2, -12),
+      skills: new THREE.Vector3(14, -1, -4),
+      projects: new THREE.Vector3(12, 1, 13),
+      contact: new THREE.Vector3(-6, -3, 12),
+    },
+  },
+};
+
 const canvas = document.querySelector(".scene-canvas");
 const statusPill = document.getElementById("status-pill");
 const titleEl = document.getElementById("section-title");
@@ -203,6 +242,7 @@ const undockRadius = 12.8;
 let zoomScale = 1;
 let cameraPitch = 0.08;
 let sceneScaleFactor = 1;
+let currentLayout = LAYOUT_PRESETS.desktop;
 let activeSection = null;
 let dockCandidate = null;
 let isAutoPiloting = false;
@@ -339,7 +379,6 @@ function createPlanet(section) {
     ring,
     glow,
     radius: planetConfig.radius,
-    basePosition: section.position.clone(),
   };
   scene.add(group);
   planets.push(group);
@@ -356,29 +395,32 @@ function getSectionPosition(section) {
   return getPlanetGroup(section)?.position || section.position;
 }
 
-function getResponsiveSceneScale() {
-  const compactWidth = 760;
-  const compactHeight = 620;
-
-  if (window.innerWidth >= compactWidth && window.innerHeight >= compactHeight) {
-    return 1;
+function getResponsiveLayout() {
+  if (window.innerWidth < 700 || window.innerHeight < 620) {
+    return LAYOUT_PRESETS.mobile;
   }
 
-  const widthScale = window.innerWidth / compactWidth;
-  const heightScale = window.innerHeight / compactHeight;
-  return THREE.MathUtils.clamp(Math.min(widthScale, heightScale), 0.8, 1);
+  if (window.innerWidth < 1100 || window.innerHeight < 760) {
+    return LAYOUT_PRESETS.tablet;
+  }
+
+  return LAYOUT_PRESETS.desktop;
 }
 
 function applyResponsiveSceneLayout() {
-  sceneScaleFactor = getResponsiveSceneScale();
+  const previousScale = sceneScaleFactor;
+  currentLayout = getResponsiveLayout();
+  sceneScaleFactor = currentLayout.scale;
 
   planets.forEach((planetGroup) => {
     planetGroup.scale.setScalar(sceneScaleFactor);
-    planetGroup.position.copy(planetGroup.userData.basePosition).multiplyScalar(sceneScaleFactor);
+    planetGroup.position.copy(currentLayout.positions[planetGroup.userData.section.id]);
   });
 
   if (activeSection && !isAutoPiloting) {
     rocket.position.copy(getSectionPosition(activeSection)).add(new THREE.Vector3(6.8 * sceneScaleFactor, 0, 0));
+  } else if (!activeSection && !isAutoPiloting && previousScale !== 0) {
+    rocket.position.multiplyScalar(sceneScaleFactor / previousScale);
   }
 
   if (dockCandidate) {
@@ -480,13 +522,13 @@ function updateDockCandidate() {
     }
   });
 
-  dockCandidate = nearestDistance < undockRadius ? nearest : null;
+  dockCandidate = nearestDistance < undockRadius * sceneScaleFactor ? nearest : null;
 
-  if (activeSection && activeSection.id === nearest?.id && nearestDistance > undockRadius) {
+  if (activeSection && activeSection.id === nearest?.id && nearestDistance > undockRadius * sceneScaleFactor) {
     undockFrom(activeSection);
-  } else if (!activeSection && nearest && nearestDistance < dockRadius) {
+  } else if (!activeSection && nearest && nearestDistance < dockRadius * sceneScaleFactor) {
     dockWith(nearest);
-  } else if (activeSection && dockCandidate?.id === activeSection.id && nearestDistance < dockRadius) {
+  } else if (activeSection && dockCandidate?.id === activeSection.id && nearestDistance < dockRadius * sceneScaleFactor) {
     updateStatus(`Docked at ${activeSection.title}`);
   } else if (dockCandidate && !isMobileMode() && !activeSection) {
     updateStatus(`Approaching ${dockCandidate.title}. Auto-docking when close enough.`);
@@ -572,8 +614,8 @@ function handleAutoPilot(delta) {
 
 function updateCamera() {
   const totalPitch = THREE.MathUtils.clamp(cameraPitch, -0.35, 0.35);
-  const chaseDistance = (15.5 + (1 - sceneScaleFactor) * 8) * zoomScale;
-  const chaseHeight = (6.2 + (1 - sceneScaleFactor) * 2.8) * zoomScale;
+  const chaseDistance = currentLayout.chaseDistance * zoomScale;
+  const chaseHeight = currentLayout.chaseHeight * zoomScale;
 
   cameraOffset.set(chaseDistance, chaseHeight + totalPitch * 8, 0);
   cameraOffset.applyAxisAngle(yAxis, rocket.rotation.y);
@@ -595,7 +637,7 @@ function resize() {
   const width = canvas.clientWidth || window.innerWidth;
   const height = canvas.clientHeight || window.innerHeight;
   applyResponsiveSceneLayout();
-  camera.fov = width < 900 ? 66 : 58;
+  camera.fov = currentLayout.fov;
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setSize(width, height, false);
