@@ -3159,11 +3159,8 @@ function syncHud(now, bounds) {
 }
 
 function updateRenderQuality(width, height) {
-  const isDesktopQuality =
-    !pointerQuery.matches &&
-    currentLayout === LAYOUT_PRESETS.desktop &&
-    width >= 1100 &&
-    height >= 700;
+  // Per user request, force maximum quality (Bloom enabled) on all devices
+  const isDesktopQuality = true;
   
   // Uncapped pixel ratio for maximum sharpness on modern high-DPI displays (like 3.0 on flagship phones)
   renderer.setPixelRatio(window.devicePixelRatio);
