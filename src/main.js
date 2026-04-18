@@ -1929,9 +1929,9 @@ function updateDockCandidate() {
 
 function handleDesktopMovement(delta) {
   const yawRate = 2.4 * delta;
-  const thrust = keyboard.has("Shift") ? 24.0 : 12.0;
+  const thrust = keyboard.has("Shift") ? 48.0 : 16.0;
   const drag = 0.92;
-  const liftSpeed = keyboard.has("Shift") ? 18.0 : 10.0;
+  const liftSpeed = keyboard.has("Shift") ? 32.0 : 12.0;
 
   if (keyboard.has("ArrowLeft") || keyboard.has("a") || keyboard.has("4")) {
     rocket.rotation.y -= yawRate;
@@ -2005,7 +2005,7 @@ function handleAutoPilot(delta) {
   }
 
   const direction = tempDirection.normalize();
-  rocket.position.add(direction.multiplyScalar(Math.min(distance, delta * 45.0)));
+  rocket.position.add(direction.multiplyScalar(Math.min(distance, delta * 105.0)));
 
   const yaw = Math.atan2(direction.z, direction.x);
 
