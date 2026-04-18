@@ -8,6 +8,7 @@ const sections = [
     subtitle: "About Me",
     description:
       "I am a Software Engineering student at the University of Alberta (Expected Graduation 2027) with a proven track record of delivering high-impact solutions across multiple internships. My expertise spans full-stack development, performance optimization, and AI integration, with successful tenures at Ericsson, Pason Systems, and ANC. I specialize in building scalable applications that solve complex problems, from RAG chatbots to 5G network testing automation.",
+    funFact: "The Sun accounts for 99.86% of the mass in the entire solar system.",
     color: "#ffb347",
     position: new THREE.Vector3(0, 0, 0),
     facts: [],
@@ -18,6 +19,7 @@ const sections = [
     subtitle: "Projects",
     description:
       "Some Stuff I've built.",
+    funFact: "Earth's rotation is gradually slowing down at a rate of 17 milliseconds per hundred years.",
     color: "#6cb7ff",
     position: new THREE.Vector3(-28, 2, -24),
     facts: [
@@ -52,7 +54,8 @@ const sections = [
     title: "Mars",
     subtitle: "Skills",
     description:
-      "",
+      "A battle-tested technical arsenal across full-stack engineering, cloud infrastructure, and AI integration. Specialized in transforming complex requirements into high-performance, scalable systems.",
+    funFact: "Mars is home to Olympus Mons, the tallest planetary mountain in the solar system, standing three times higher than Mount Everest.",
     color: "#d96f43",
     position: new THREE.Vector3(24, -2, -12),
     facts: [
@@ -68,6 +71,7 @@ const sections = [
     subtitle: "Experience",
     description:
       "Highlights from my internships.",
+    funFact: "Jupiter has the shortest day of any planet, rotating completely on its axis in less than 10 hours.",
     color: "#d9b38c",
     position: new THREE.Vector3(20, 1, 28),
     facts: [
@@ -84,6 +88,7 @@ const sections = [
     subtitle: "Contact",
     description:
       "Feel free to reach out if you'd like to chat about opportunities, experience, resume or anything else!",
+    funFact: "Saturn's beautiful rings are incredibly thin—spanning up to 282,000 kilometers across, but only about 10 meters thick.",
     color: "#e6d28a",
     position: new THREE.Vector3(-10, -5, 24),
     facts: [
@@ -96,12 +101,65 @@ const sections = [
   },
 ];
 
+function createVoyagerModel(name) {
+  const group = new THREE.Group();
+  
+  const goldMaterial = new THREE.MeshStandardMaterial({ color: 0xc5a059, metalness: 0.9, roughness: 0.2, fog: false });
+  const dishMaterial = new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.1, roughness: 0.8, side: THREE.DoubleSide, fog: false });
+  const darkMaterial = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.5, roughness: 0.5, fog: false });
+
+  // High Gain Antenna (The Dish)
+  const dishGeom = new THREE.CylinderGeometry(2.0, 0.4, 0.6, 24, 1, true);
+  const dish = new THREE.Mesh(dishGeom, dishMaterial);
+  dish.rotation.x = Math.PI / 2;
+  group.add(dish);
+
+  // Central Bus
+  const busGeom = new THREE.CylinderGeometry(0.6, 0.6, 0.8, 10);
+  const bus = new THREE.Mesh(busGeom, goldMaterial);
+  bus.rotation.x = Math.PI / 2;
+  bus.position.set(0, 0, -0.7);
+  group.add(bus);
+
+  // RTG Boom
+  const rtgBoomGeom = new THREE.BoxGeometry(0.1, 0.1, 2.5);
+  const rtgBoom = new THREE.Mesh(rtgBoomGeom, darkMaterial);
+  rtgBoom.position.set(1.2, 0, -0.6);
+  rtgBoom.rotation.y = 0.4;
+  group.add(rtgBoom);
+
+  // RTGs
+  const rtgGeom = new THREE.CylinderGeometry(0.15, 0.15, 0.8, 8);
+  const rtg = new THREE.Mesh(rtgGeom, darkMaterial);
+  rtg.position.set(2.2, 0, -1.2);
+  rtg.rotation.z = Math.PI / 2;
+  group.add(rtg);
+
+  // Science Boom
+  const sciBoomGeom = new THREE.BoxGeometry(0.1, 0.1, 3.5);
+  const sciBoom = new THREE.Mesh(sciBoomGeom, darkMaterial);
+  sciBoom.position.set(-1.6, 1.2, -0.6);
+  sciBoom.rotation.y = -0.4;
+  sciBoom.rotation.z = 0.4;
+  group.add(sciBoom);
+
+  group.scale.setScalar(1.1);
+  
+  // Add a tiny light to the probe so it's visible in deep space
+  const light = new THREE.PointLight(0xffffff, 2.5, 30);
+  light.position.set(0, 0, 0);
+  group.add(light);
+
+  group.userData = { name };
+  return group;
+}
+
 const LAYOUT_PRESETS = {
   desktop: {
     scale: 1,
     fov: 62,
-    chaseDistance: 18.5,
-    chaseHeight: 5.8,
+    chaseDistance: 25.0,
+    chaseHeight: 8.0,
     positions: {
       about: new THREE.Vector3(0, 0, 0),
       projects: new THREE.Vector3(-42, 2, -36),
@@ -113,8 +171,8 @@ const LAYOUT_PRESETS = {
   tablet: {
     scale: 0.92,
     fov: 64,
-    chaseDistance: 20,
-    chaseHeight: 6.6,
+    chaseDistance: 28.0,
+    chaseHeight: 9.5,
     positions: {
       about: new THREE.Vector3(0, 0, 0),
       projects: new THREE.Vector3(-38, 2, -30),
@@ -126,8 +184,8 @@ const LAYOUT_PRESETS = {
   mobile: {
     scale: 0.68,
     fov: 72,
-    chaseDistance: 23,
-    chaseHeight: 8.8,
+    chaseDistance: 32.0,
+    chaseHeight: 12.0,
     positions: {
       about: new THREE.Vector3(0, 0, 0),
       projects: new THREE.Vector3(-26, 3, -14),
@@ -162,10 +220,83 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight, false);
 
-const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x020612, 50, 160);
+let isLoaded = false;
+let cinematicFadeValue = 1.0;
 
-const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 300);
+const loadingManager = new THREE.LoadingManager();
+loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+  const percent = Math.floor((itemsLoaded / itemsTotal) * 100);
+  const textEl = document.getElementById("loader-text");
+  if (textEl) {
+    textEl.textContent = `Loading Universe... ${percent}%`;
+  }
+};
+
+loadingManager.onLoad = () => {
+  setTimeout(() => {
+    const overlay = document.getElementById("loader-overlay");
+    if (overlay) {
+      overlay.classList.add("fade-out");
+    }
+    isLoaded = true;
+  }, 400);
+};
+
+const scene = new THREE.Scene();
+const textureLoader = new THREE.TextureLoader(loadingManager);
+
+const voyagerStartDist1 = 24430150000; // Approx km for V1
+const voyagerStartDist2 = 20385920000; // Approx km for V2
+const voyagerSpeed1 = 0.01699; // km per ms (approximating ~17 km/s)
+const voyagerSpeed2 = 0.01537; // km per ms (approximating ~15.4 km/s)
+const missionStartTime = performance.now();
+
+function createDeepSpaceLabel(name, fact) {
+  const container = document.createElement('div');
+  container.id = `label-${name.replace(' ', '').toLowerCase()}`;
+  container.style.position = 'absolute';
+  container.style.width = '220px';
+  container.style.padding = '12px 18px';
+  container.style.background = 'rgba(10, 20, 35, 0.85)';
+  container.style.border = '2px solid rgba(130, 180, 255, 0.5)';
+  container.style.borderRadius = '2px'; // Sharp tech look
+  container.style.backdropFilter = 'blur(6px)';
+  container.style.color = '#eef2ff';
+  container.style.fontFamily = 'Space Grotesk, sans-serif';
+  container.style.fontSize = '0.9rem';
+  container.style.opacity = '0';
+  container.style.pointerEvents = 'none';
+  container.style.transition = 'opacity 0.4s ease';
+  container.style.boxShadow = '0 0 20px rgba(130, 180, 255, 0.2)';
+  container.style.zIndex = '5';
+  
+  container.innerHTML = `
+    <div class="hud-tether" style="position: absolute; top: 50%; right: 100%; height: 2px; width: 40px; background: linear-gradient(to right, transparent, rgba(130, 180, 255, 0.6)); transform-origin: right center;"></div>
+    <div class="offscreen-arrow" style="position: absolute; top: 50%; left: -30px; transform: translateY(-50%) rotate(0deg); color: #6cb7ff; font-size: 1.2rem; display: none;">▶</div>
+    <em style="display: block; margin-bottom: 6px; color: #a3c2ff; font-size: 0.7rem; font-style: normal; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700;">📡 Transmission: ${name}</em>
+    <span style="font-family: 'Courier New', monospace; font-size: 0.85rem; color: #6cb7ff;">Distance: ${fact}</span>
+  `;
+  
+  document.getElementById('asteroid-labels-container').appendChild(container);
+  return container;
+}
+
+const voyager1 = createVoyagerModel("Voyager 1");
+voyager1.position.set(160, 40, -180);
+voyager1.rotation.set(0.5, 0.2, 0.1);
+const voyager1Label = createDeepSpaceLabel("Voyager 1", "24.4 Billion km");
+voyager1.userData.label = voyager1Label;
+scene.add(voyager1);
+
+const voyager2 = createVoyagerModel("Voyager 2");
+voyager2.position.set(-180, -30, 140);
+voyager2.rotation.set(-0.3, 0.5, -0.4);
+const voyager2Label = createDeepSpaceLabel("Voyager 2", "20.3 Billion km");
+voyager2.userData.label = voyager2Label;
+scene.add(voyager2);
+scene.fog = new THREE.Fog(0x020612, 100, 1200);
+
+const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 2000);
 camera.position.set(0, 8, 18);
 
 scene.add(new THREE.AmbientLight(0xd8f8ff, 1.35));
@@ -179,27 +310,54 @@ rimLight.position.set(-22, 8, -10);
 scene.add(rimLight);
 
 const starGeometry = new THREE.BufferGeometry();
-const starCount = 1800;
+const starCount = 3000;
 const starPositions = new Float32Array(starCount * 3);
+const starColors = new Float32Array(starCount * 3);
+const c = new THREE.Color();
 
-for (let index = 0; index < starCount; index += 1) {
-  const offset = index * 3;
-  starPositions[offset] = THREE.MathUtils.randFloatSpread(220);
-  starPositions[offset + 1] = THREE.MathUtils.randFloatSpread(140);
-  starPositions[offset + 2] = THREE.MathUtils.randFloatSpread(220);
+for (let i = 0; i < starCount; i++) {
+  const o = i * 3;
+  // Increase distribution radius heavily to emphasize deep parallax
+  starPositions[o] = THREE.MathUtils.randFloatSpread(400);
+  starPositions[o + 1] = THREE.MathUtils.randFloatSpread(200);
+  starPositions[o + 2] = THREE.MathUtils.randFloatSpread(400);
+
+  // Blend temperatures: mostly cool blues and stark white, with rare hot oranges
+  const hue = Math.random() > 0.8 ? THREE.MathUtils.randFloat(0.05, 0.1) : THREE.MathUtils.randFloat(0.55, 0.65);
+  c.setHSL(hue, THREE.MathUtils.randFloat(0.4, 0.9), THREE.MathUtils.randFloat(0.5, 1.0));
+  starColors[o] = c.r;
+  starColors[o + 1] = c.g;
+  starColors[o + 2] = c.b;
 }
 
 starGeometry.setAttribute("position", new THREE.BufferAttribute(starPositions, 3));
+starGeometry.setAttribute("color", new THREE.BufferAttribute(starColors, 3));
 const stars = new THREE.Points(
   starGeometry,
   new THREE.PointsMaterial({
-    color: 0xd6f5ff,
-    size: 0.48,
+    vertexColors: true,
+    size: 0.75,
     transparent: true,
-    opacity: 0.9,
+    opacity: 0.85,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
   }),
 );
 scene.add(stars);
+
+// Deep space dynamic backdrop map
+const galaxyMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(350, 64, 64),
+  new THREE.MeshBasicMaterial({
+    map: textureLoader.load("/textures/galaxy_starfield.png"),
+    side: THREE.BackSide,
+    transparent: true,
+    opacity: 0.35, 
+    depthWrite: false, 
+    fog: false,
+  })
+);
+scene.add(galaxyMesh);
 
 const orbitRingMaterial = new THREE.MeshBasicMaterial({
   color: 0x284055,
@@ -631,13 +789,13 @@ function makeNoiseLayer(ctx, size, color, count, minRadius, maxRadius, alpha = 1
   ctx.restore();
 }
 
-const textureLoader = new THREE.TextureLoader();
 const planetTextures = {
   Sun: textureLoader.load("/textures/sunmap.jpg"),
   Earth: textureLoader.load("/textures/earthmap1k.jpg"),
   Mars: textureLoader.load("/textures/marsmap1k.jpg"),
   Jupiter: textureLoader.load("/textures/jupitermap.jpg"),
   Saturn: textureLoader.load("/textures/saturnmap.jpg"),
+  Moon: textureLoader.load("/textures/moonmap1k.jpg"),
 };
 
 function createSaturnRingTexture() {
@@ -856,12 +1014,148 @@ function createPlanet(section) {
     group.add(ring);
   }
 
+  let moonGroup = null;
+  if (section.title === "Earth") {
+    moonGroup = new THREE.Group();
+    const moon = new THREE.Mesh(
+      new THREE.SphereGeometry(1.0, 32, 32),
+      new THREE.MeshStandardMaterial({
+        map: planetTextures["Moon"],
+        roughness: 1.0,
+        metalness: 0.0,
+      })
+    );
+    moon.position.set(8.5, 0, 0);
+    moonGroup.rotation.x = 0.15;
+    moonGroup.rotation.z = 0.1;
+    
+    moonGroup.add(moon);
+    group.add(moonGroup);
+  }
+
+  let asteroidData = null;
+  if (section.funFact) {
+    const asteroidGroup = new THREE.Group();
+    let anchorMesh;
+    if (section.title === "Earth") {
+      anchorMesh = new THREE.Group();
+      
+      const moduleMaterial = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.3, roughness: 0.7 });
+      const trussMaterial = new THREE.MeshStandardMaterial({ color: 0xcdcdcd, metalness: 0.9, roughness: 0.2 });
+      const panelMaterial = new THREE.MeshStandardMaterial({ color: 0x1e3f66, metalness: 0.5, roughness: 0.4 });
+      
+      // Main pressurized modules (Central spine)
+      const coreModule = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 2.0, 16), moduleMaterial);
+      coreModule.rotation.z = Math.PI / 2;
+      
+      // Transverse truss (Long backbone holding panels)
+      const mainTruss = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 4.0, 8), trussMaterial);
+      
+      // Cross habitation module
+      const habModule = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 1.2, 16), moduleMaterial);
+      habModule.position.set(0.4, 0, 0);
+
+      // Distinctive 4-wing Solar Array system
+      const panelGeom = new THREE.BoxGeometry(0.6, 0.04, 1.5);
+      
+      const p1 = new THREE.Mesh(panelGeom, panelMaterial);
+      p1.position.set(0, 1.5, -0.9);
+      
+      const p2 = new THREE.Mesh(panelGeom, panelMaterial);
+      p2.position.set(0, 1.5, 0.9);
+      
+      const p3 = new THREE.Mesh(panelGeom, panelMaterial);
+      p3.position.set(0, -1.5, -0.9);
+      
+      const p4 = new THREE.Mesh(panelGeom, panelMaterial);
+      p4.position.set(0, -1.5, 0.9);
+      
+      anchorMesh.add(coreModule, mainTruss, habModule, p1, p2, p3, p4);
+      anchorMesh.scale.setScalar(0.4);
+    } else if (section.title === "Sun") {
+      anchorMesh = new THREE.Group();
+      
+      const shieldMaterial = new THREE.MeshStandardMaterial({ color: 0xeaeaea, metalness: 0.1, roughness: 0.9, flatShading: true });
+      const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.4 });
+      const panelMaterial = new THREE.MeshStandardMaterial({ color: 0x112244, metalness: 0.5, roughness: 0.5 });
+      
+      const shield = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.1, 16), shieldMaterial);
+      shield.rotation.x = Math.PI / 2;
+      shield.position.set(0, 0, 0.6);
+      
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.8, 6), bodyMaterial);
+      body.rotation.x = Math.PI / 2;
+      body.position.set(0, 0, 0);
+      
+      const panelGeom = new THREE.BoxGeometry(1.6, 0.05, 0.5);
+      const pL = new THREE.Mesh(panelGeom, panelMaterial);
+      pL.position.set(-1.0, 0, -0.2);
+      pL.rotation.y = 0.35;
+      
+      const pR = new THREE.Mesh(panelGeom, panelMaterial);
+      pR.position.set(1.0, 0, -0.2);
+      pR.rotation.y = -0.35;
+      
+      const boom = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2), shieldMaterial);
+      boom.rotation.x = Math.PI / 2;
+      boom.position.set(0, 0, -0.8);
+      
+      anchorMesh.add(shield, body, pL, pR, boom);
+      anchorMesh.scale.setScalar(0.6);
+    } else {
+      anchorMesh = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(Math.random() * 0.4 + 0.6, 0),
+        new THREE.MeshStandardMaterial({
+          color: 0x777777,
+          roughness: 0.9,
+          metalness: 0.1,
+          flatShading: true
+        })
+      );
+    }
+    
+    anchorMesh.position.set(planetConfig.radius + 6.5, 3.5, 0);
+    asteroidGroup.rotation.x = Math.random() * Math.PI;
+    asteroidGroup.rotation.z = Math.random() * Math.PI;
+    
+    asteroidGroup.add(anchorMesh);
+    group.add(asteroidGroup);
+
+    const labelDiv = document.createElement('div');
+    labelDiv.style.position = 'absolute';
+    labelDiv.style.width = '240px';
+    labelDiv.style.padding = '12px 16px';
+    labelDiv.style.background = 'rgba(10, 20, 35, 0.7)';
+    labelDiv.style.border = '1px solid rgba(130, 180, 255, 0.3)';
+    labelDiv.style.borderRadius = '8px';
+    labelDiv.style.backdropFilter = 'blur(4px)';
+    labelDiv.style.color = '#eef2ff';
+    labelDiv.style.fontFamily = 'Space Grotesk, sans-serif';
+    labelDiv.style.fontSize = '0.85rem';
+    labelDiv.style.lineHeight = '1.4';
+    labelDiv.style.opacity = '0';
+    labelDiv.style.pointerEvents = 'none';
+    labelDiv.style.transition = 'opacity 0.4s ease'; // Fades smoothly on approach
+    labelDiv.style.transform = 'translate(15px, -50%)'; // Offset from asteroid center
+    labelDiv.innerHTML = `<em style="display: block; margin-bottom: 6px; color: #a3c2ff; font-size: 0.7rem; font-style: normal; letter-spacing: 0.05em; text-transform: uppercase;">Astronomy Fact</em>${section.funFact}`;
+    
+    document.getElementById('asteroid-labels-container').appendChild(labelDiv);
+
+    asteroidData = {
+      group: asteroidGroup,
+      mesh: anchorMesh,
+      label: labelDiv
+    };
+  }
+
   group.position.copy(section.position);
   group.userData = {
     section,
     ring,
     corona,
     glow,
+    moonGroup,
+    asteroidData,
     radius: planetConfig.radius,
   };
   scene.add(group);
@@ -1070,6 +1364,33 @@ function updateDockCandidate() {
     if (planetGroup.userData.ring) {
       planetGroup.userData.ring.material.opacity = distance < undockRadius ? 1.0 : 0.85;
     }
+    if (planetGroup.userData.moonGroup) {
+      planetGroup.userData.moonGroup.rotation.y -= 0.003;
+      planetGroup.userData.moonGroup.children[0].rotation.y -= 0.005;
+    }
+
+    if (planetGroup.userData.asteroidData) {
+      const ast = planetGroup.userData.asteroidData;
+      
+      ast.group.rotation.y -= 0.002;
+      ast.mesh.rotation.x += 0.004;
+      ast.mesh.rotation.y += 0.005;
+
+      if (distance < undockRadius + 18) {
+        const vector = new THREE.Vector3();
+        ast.mesh.getWorldPosition(vector);
+        vector.project(camera);
+
+        const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+        const y = -(vector.y * 0.5 - 0.5) * window.innerHeight;
+
+        ast.label.style.left = `${x}px`;
+        ast.label.style.top = `${y}px`;
+        ast.label.style.opacity = distance < undockRadius + 5 ? '1' : '0';
+      } else {
+        ast.label.style.opacity = '0';
+      }
+    }
 
     if (distance < nearestDistance) {
       nearest = section;
@@ -1093,10 +1414,10 @@ function updateDockCandidate() {
 }
 
 function handleDesktopMovement(delta) {
-  const yawRate = 2.1 * delta;
-  const thrust = keyboard.has("Shift") ? 7.2 : 3.8;
-  const drag = 0.88;
-  const liftSpeed = keyboard.has("Shift") ? 8.5 : 5.2;
+  const yawRate = 2.4 * delta;
+  const thrust = keyboard.has("Shift") ? 14.0 : 6.5;
+  const drag = 0.92;
+  const liftSpeed = keyboard.has("Shift") ? 12.0 : 7.0;
 
   if (keyboard.has("ArrowLeft") || keyboard.has("a") || keyboard.has("4")) {
     rocket.rotation.y -= yawRate;
@@ -1144,7 +1465,7 @@ function handleDesktopMovement(delta) {
 
   rocketVelocity.multiplyScalar(drag);
   rocket.position.add(rocketVelocity);
-  rocket.position.clamp(new THREE.Vector3(-42, -12, -42), new THREE.Vector3(42, 12, 42));
+  rocket.position.clamp(new THREE.Vector3(-150, -60, -150), new THREE.Vector3(150, 60, 150));
 
   flame.scale.setScalar(0.9 + Math.min(rocketVelocity.length() * 0.22, 0.95));
   flame.material.opacity = 0.55 + Math.min(rocketVelocity.length() * 0.16, 0.35);
@@ -1447,6 +1768,13 @@ zoomOutButton.addEventListener("click", () => adjustZoom(1));
 let lastTime = performance.now();
 
 function tick(now) {
+  if (!isLoaded) {
+    camera.position.set(0, 8, 400); // Lock it out in deep space physically while parsing
+    if (!lastTime) lastTime = now;
+    requestAnimationFrame(tick);
+    return;
+  }
+
   const delta = Math.min((now - lastTime) / 1000, 0.05);
   lastTime = now;
 
@@ -1461,6 +1789,80 @@ function tick(now) {
 
   updateDockCandidate();
   updateCamera();
+
+  // Execute Cinematic Warp override over the standard updateCamera lerp
+  if (cinematicFadeValue > 0) {
+    cinematicFadeValue -= delta * 0.45; // Approximately 2.2 seconds to smoothly dissipate
+    const warpProgress = Math.max(0, cinematicFadeValue);
+    const easeProgress = warpProgress * warpProgress; // Quadratic ease-out interpolation mapping
+    camera.position.lerpVectors(camera.position, new THREE.Vector3(0, 8, 400), easeProgress);
+  }
+
+  voyager1.rotation.y += 0.0005;
+  voyager1.rotation.z += 0.0002;
+  voyager2.rotation.y += 0.0004;
+  voyager2.rotation.x += 0.0003;
+
+  // Live Distance Calculation
+  const elapsed = now - missionStartTime;
+  const dist1 = (voyagerStartDist1 + elapsed * voyagerSpeed1).toLocaleString();
+  const dist2 = (voyagerStartDist2 + elapsed * voyagerSpeed2).toLocaleString();
+  
+  const v1Content = document.getElementById('label-voyager1');
+  const v2Content = document.getElementById('label-voyager2');
+  if (v1Content) v1Content.querySelector('span').textContent = `Distance from Earth: ${dist1} km`;
+  if (v2Content) v2Content.querySelector('span').textContent = `Distance from Earth: ${dist2} km`;
+
+  // Project Voyager labels
+  [voyager1, voyager2].forEach(v => {
+    const vector = new THREE.Vector3();
+    v.getWorldPosition(vector);
+    
+    // Check if behind camera
+    const frustum = new THREE.Frustum();
+    frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+    const label = v.userData.label;
+    const arrow = label.querySelector('.offscreen-arrow');
+
+    if (frustum.containsPoint(vector)) {
+      vector.project(camera);
+      const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+      const y = -(vector.y * 0.5 - 0.5) * window.innerHeight;
+      
+      label.style.left = `${x + 60}px`; // Offset to the right of the probe
+      label.style.top = `${y}px`;
+      label.style.transform = 'translateY(-50%)';
+      
+      // Update tether length/rotation (very simplified visual)
+      const tether = label.querySelector('.hud-tether');
+      if (tether) tether.style.display = 'block';
+
+      arrow.style.display = 'none';
+      
+      const screenDist = Math.hypot(vector.x, vector.y);
+      label.style.opacity = screenDist < 0.4 ? '1' : '0.4';
+    } else {
+      // Off-screen guide!
+      const vectorClamped = vector.clone().project(camera);
+      label.style.opacity = '1';
+      arrow.style.display = 'block';
+      
+      // Keep label at screen edges
+      const margin = 120;
+      const x = Math.max(margin, Math.min(window.innerWidth - margin, (vectorClamped.x * 0.5 + 0.5) * window.innerWidth));
+      const y = Math.max(margin, Math.min(window.innerHeight - margin, -(vectorClamped.y * 0.5 - 0.5) * window.innerHeight));
+      
+      label.style.left = `${x}px`;
+      label.style.top = `${y}px`;
+      
+      const angle = Math.atan2(y - window.innerHeight/2, x - window.innerWidth/2);
+      arrow.style.transform = `translateY(-50%) rotate(${angle}rad)`;
+
+      const tether = label.querySelector('.hud-tether');
+      if (tether) tether.style.display = 'none';
+    }
+  });
+
   updateTrail();
   renderer.render(scene, camera);
   requestAnimationFrame(tick);

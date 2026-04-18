@@ -493,3 +493,57 @@ body {
     gap: 0.4rem;
   }
 }
+
+/* --- Cinematic Loader Overlay --- */
+#loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: #020612;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 1.2s ease-out, visibility 1.2s ease-out;
+}
+
+#loader-overlay.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.loader-ring {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 2px solid rgba(130, 180, 255, 0.1);
+  border-top-color: #6cb7ff;
+  border-right-color: rgba(130, 180, 255, 0.5);
+  animation: spin 1s infinite linear, glow 2s infinite ease-in-out alternate;
+  margin-bottom: 24px;
+}
+
+#loader-text {
+  font-family: "Space Grotesk", sans-serif;
+  color: #b8cfff;
+  font-size: 0.9rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  animation: pulse 1.5s infinite alternate;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes glow {
+  0% { box-shadow: 0 0 10px rgba(108, 183, 255, 0.1); }
+  100% { box-shadow: 0 0 25px rgba(108, 183, 255, 0.4); }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
