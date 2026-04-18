@@ -221,11 +221,621 @@ const SoundEngine = {
     g.connect(this.ctx.destination);
     osc.start();
     osc.stop(this.ctx.currentTime + 1.2);
+  },
+  playExplosion() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+
+    // Layer 1: Deep boom
+    const boom = this.ctx.createOscillator();
+    const boomGain = this.ctx.createGain();
+    boom.type = 'sine';
+    boom.frequency.setValueAtTime(60, t);
+    boom.frequency.exponentialRampToValueAtTime(15, t + 1.5);
+    boomGain.gain.setValueAtTime(0.25, t);
+    boomGain.gain.linearRampToValueAtTime(0, t + 1.8);
+    boom.connect(boomGain);
+    boomGain.connect(this.ctx.destination);
+    boom.start(t);
+    boom.stop(t + 1.8);
+
+    // Layer 2: Noise crackle
+    const bufferSize = this.ctx.sampleRate * 2;
+    const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.3));
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    const noiseGain = this.ctx.createGain();
+    const noiseFilter = this.ctx.createBiquadFilter();
+    noiseFilter.type = 'lowpass';
+    noiseFilter.frequency.setValueAtTime(800, t);
+    noiseFilter.frequency.exponentialRampToValueAtTime(100, t + 1.5);
+    noiseGain.gain.setValueAtTime(0.18, t);
+    noiseGain.gain.linearRampToValueAtTime(0, t + 1.5);
+    noise.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(this.ctx.destination);
+    noise.start(t);
+
+    // Layer 3: High whistle (solar wind)
+    const whistle = this.ctx.createOscillator();
+    const whistleGain = this.ctx.createGain();
+    whistle.type = 'sawtooth';
+    whistle.frequency.setValueAtTime(2000, t);
+    whistle.frequency.exponentialRampToValueAtTime(200, t + 1.0);
+    whistleGain.gain.setValueAtTime(0.04, t);
+    whistleGain.gain.linearRampToValueAtTime(0, t + 1.0);
+    whistle.connect(whistleGain);
+    whistleGain.connect(this.ctx.destination);
+    whistle.start(t);
+    whistle.stop(t + 1.0);
+  },
+  playSpaghettification() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+
+    // Layer 1: Deep descending drone (gravitational pull)
+    const drone = this.ctx.createOscillator();
+    const droneGain = this.ctx.createGain();
+    drone.type = 'sine';
+    drone.frequency.setValueAtTime(120, t);
+    drone.frequency.exponentialRampToValueAtTime(8, t + 2.5);
+    droneGain.gain.setValueAtTime(0.2, t);
+    droneGain.gain.linearRampToValueAtTime(0.35, t + 1.0);
+    droneGain.gain.linearRampToValueAtTime(0, t + 2.5);
+    drone.connect(droneGain);
+    droneGain.connect(this.ctx.destination);
+    drone.start(t);
+    drone.stop(t + 2.5);
+
+    // Layer 2: High-pitched stretching whine
+    const stretch = this.ctx.createOscillator();
+    const stretchGain = this.ctx.createGain();
+    stretch.type = 'sawtooth';
+    stretch.frequency.setValueAtTime(400, t + 0.3);
+    stretch.frequency.exponentialRampToValueAtTime(4000, t + 1.8);
+    stretch.frequency.exponentialRampToValueAtTime(20, t + 2.5);
+    stretchGain.gain.setValueAtTime(0, t);
+    stretchGain.gain.linearRampToValueAtTime(0.06, t + 0.5);
+    stretchGain.gain.linearRampToValueAtTime(0.1, t + 1.5);
+    stretchGain.gain.linearRampToValueAtTime(0, t + 2.5);
+    stretch.connect(stretchGain);
+    stretchGain.connect(this.ctx.destination);
+    stretch.start(t + 0.3);
+    stretch.stop(t + 2.5);
+
+    // Layer 3: Sub-bass thud at the end
+    const thud = this.ctx.createOscillator();
+    const thudGain = this.ctx.createGain();
+    thud.type = 'sine';
+    thud.frequency.setValueAtTime(30, t + 2.0);
+    thudGain.gain.setValueAtTime(0, t);
+    thudGain.gain.linearRampToValueAtTime(0.3, t + 2.1);
+    thudGain.gain.linearRampToValueAtTime(0, t + 2.5);
+    thud.connect(thudGain);
+    thudGain.connect(this.ctx.destination);
+    thud.start(t + 2.0);
+    thud.stop(t + 2.5);
   }
 };
 
 window.addEventListener("pointerdown", () => SoundEngine.init(), { once: true });
 window.addEventListener("keydown", () => SoundEngine.init(), { once: true });
+
+/* --- Sun Explosion System --- */
+let sunExplosionParticles = null;
+let sunExplosionShockwave = null;
+let sunExplosionFlash = null;
+const SUN_BURN_DURATION = 2.0;
+
+function createSunExplosion(origin) {
+  // Clean up previous explosion
+  cleanupSunExplosion();
+
+  const group = new THREE.Group();
+  group.position.copy(origin);
+
+  // --- Particle debris (300 glowing fragments) ---
+  const particleCount = 300;
+  const particleGeom = new THREE.BufferGeometry();
+  const positions = new Float32Array(particleCount * 3);
+  const colors = new Float32Array(particleCount * 3);
+  const sizes = new Float32Array(particleCount);
+  const velocities = [];
+
+  for (let i = 0; i < particleCount; i++) {
+    positions[i * 3] = 0;
+    positions[i * 3 + 1] = 0;
+    positions[i * 3 + 2] = 0;
+
+    // Color gradient: white-hot core → orange → deep red
+    const heat = Math.random();
+    if (heat > 0.7) {
+      // White-hot
+      colors[i * 3] = 1;
+      colors[i * 3 + 1] = 0.95 + Math.random() * 0.05;
+      colors[i * 3 + 2] = 0.8 + Math.random() * 0.2;
+    } else if (heat > 0.3) {
+      // Orange-yellow
+      colors[i * 3] = 1;
+      colors[i * 3 + 1] = 0.4 + Math.random() * 0.4;
+      colors[i * 3 + 2] = 0.05 + Math.random() * 0.15;
+    } else {
+      // Deep red ember
+      colors[i * 3] = 0.9 + Math.random() * 0.1;
+      colors[i * 3 + 1] = 0.1 + Math.random() * 0.2;
+      colors[i * 3 + 2] = 0.02;
+    }
+
+    sizes[i] = 0.3 + Math.random() * 1.2;
+
+    // Radial burst with varied speed
+    const dir = new THREE.Vector3(
+      THREE.MathUtils.randFloatSpread(2),
+      THREE.MathUtils.randFloatSpread(2),
+      THREE.MathUtils.randFloatSpread(2)
+    ).normalize();
+    const speed = 15 + Math.random() * 45;
+    velocities.push(dir.multiplyScalar(speed));
+  }
+
+  particleGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  particleGeom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  particleGeom.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+  const particleMat = new THREE.PointsMaterial({
+    size: 1.0,
+    vertexColors: true,
+    transparent: true,
+    opacity: 1,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true,
+  });
+
+  const particles = new THREE.Points(particleGeom, particleMat);
+  group.add(particles);
+
+  // --- Expanding shockwave ring ---
+  const ringGeom = new THREE.RingGeometry(0.5, 2, 64);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color('#ffcc44'),
+    transparent: true,
+    opacity: 0.7,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  const shockwave = new THREE.Mesh(ringGeom, ringMat);
+  group.add(shockwave);
+
+  // Second shockwave ring (delayed)
+  const ringGeom2 = new THREE.RingGeometry(0.3, 1.5, 64);
+  const ringMat2 = new THREE.MeshBasicMaterial({
+    color: new THREE.Color('#ff8833'),
+    transparent: true,
+    opacity: 0.5,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  const shockwave2 = new THREE.Mesh(ringGeom2, ringMat2);
+  group.add(shockwave2);
+
+  // --- Central flash sphere ---
+  const flashGeom = new THREE.SphereGeometry(3, 16, 16);
+  const flashMat = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 1,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const flash = new THREE.Mesh(flashGeom, flashMat);
+  group.add(flash);
+
+  scene.add(group);
+
+  sunExplosionParticles = {
+    group,
+    particles,
+    velocities,
+    shockwave,
+    shockwave2,
+    flash,
+    time: 0,
+  };
+
+  return group;
+}
+
+function updateSunExplosion(delta) {
+  if (!sunExplosionParticles) return;
+
+  const exp = sunExplosionParticles;
+  exp.time += delta;
+  const t = exp.time;
+  const progress = Math.min(t / SUN_BURN_DURATION, 1);
+
+  // Update particle positions
+  const positions = exp.particles.geometry.attributes.position.array;
+  const count = exp.velocities.length;
+  for (let i = 0; i < count; i++) {
+    const vel = exp.velocities[i];
+    positions[i * 3] += vel.x * delta;
+    positions[i * 3 + 1] += vel.y * delta;
+    positions[i * 3 + 2] += vel.z * delta;
+
+    // Slow down particles over time
+    vel.multiplyScalar(0.97);
+  }
+  exp.particles.geometry.attributes.position.needsUpdate = true;
+
+  // Fade particles
+  const particleFade = progress < 0.3 ? 1 : 1 - ((progress - 0.3) / 0.7);
+  exp.particles.material.opacity = Math.max(0, particleFade);
+
+  // Expand shockwave rings
+  const ringScale1 = 1 + t * 40;
+  exp.shockwave.scale.setScalar(ringScale1);
+  exp.shockwave.material.opacity = Math.max(0, 0.7 * (1 - progress));
+  // Make shockwave face the camera
+  exp.shockwave.lookAt(camera.position);
+
+  const ring2Progress = Math.max(0, t - 0.15);
+  const ringScale2 = 1 + ring2Progress * 30;
+  exp.shockwave2.scale.setScalar(ringScale2);
+  exp.shockwave2.material.opacity = Math.max(0, 0.5 * (1 - Math.min(ring2Progress / (SUN_BURN_DURATION - 0.15), 1)));
+  exp.shockwave2.lookAt(camera.position);
+
+  // Flash sphere: rapid expand and fade
+  const flashScale = 3 + t * 25;
+  exp.flash.scale.setScalar(flashScale);
+  const flashOpacity = t < 0.15 ? 1 : Math.max(0, 1 - ((t - 0.15) / 0.4));
+  exp.flash.material.opacity = flashOpacity;
+
+  // Cleanup when done
+  if (progress >= 1) {
+    cleanupSunExplosion();
+  }
+}
+
+function cleanupSunExplosion() {
+  if (sunExplosionParticles) {
+    scene.remove(sunExplosionParticles.group);
+    sunExplosionParticles.particles.geometry.dispose();
+    sunExplosionParticles.particles.material.dispose();
+    sunExplosionParticles.shockwave.geometry.dispose();
+    sunExplosionParticles.shockwave.material.dispose();
+    sunExplosionParticles.shockwave2.geometry.dispose();
+    sunExplosionParticles.shockwave2.material.dispose();
+    sunExplosionParticles.flash.geometry.dispose();
+    sunExplosionParticles.flash.material.dispose();
+    sunExplosionParticles = null;
+  }
+}
+
+/* --- Black Hole System --- */
+const BLACK_HOLE_POSITION = new THREE.Vector3(750, -30, 750);
+const BLACK_HOLE_RADIUS = 8;
+const BLACK_HOLE_GRAVITY_RADIUS = 120; // Start pulling from this distance
+const BLACK_HOLE_KILL_RADIUS = 10;     // Spaghettified at this radius
+const BLACK_HOLE_DEATH_DURATION = 2.5;
+
+let blackHoleGroup = null;
+let blackHoleDeathTime = 0;
+let blackHoleRespawnTimer = 0;
+let blackHolePhase = 'none'; // 'none' | 'pull' | 'horizon' | 'spaghetti' | 'void'
+const bhPullVector = new THREE.Vector3();
+
+function createAccretionDiskTexture() {
+  const size = 512;
+  const diskCanvas = document.createElement("canvas");
+  diskCanvas.width = size;
+  diskCanvas.height = size;
+  const ctx = diskCanvas.getContext("2d");
+
+  // Radial gradient for the ring: hot inner edge → cooler outer
+  const centerX = size / 2;
+  const centerY = size / 2;
+  const innerR = size * 0.15;
+  const outerR = size * 0.48;
+
+  ctx.clearRect(0, 0, size, size);
+
+  // Build concentric rings with varying colors
+  for (let r = outerR; r > innerR; r -= 0.8) {
+    const t = (r - innerR) / (outerR - innerR); // 0 = inner, 1 = outer
+    const hue = 270 - t * 40; // Purple inner → blue outer
+    const lightness = 30 + (1 - t) * 45;
+    const alpha = (1 - t * t) * 0.7 + 0.1;
+
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+    ctx.strokeStyle = `hsla(${hue}, 90%, ${lightness}%, ${alpha})`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Hot inner edge glow
+  const innerGlow = ctx.createRadialGradient(centerX, centerY, innerR * 0.7, centerX, centerY, innerR * 1.4);
+  innerGlow.addColorStop(0, "rgba(255, 200, 255, 0.6)");
+  innerGlow.addColorStop(0.5, "rgba(200, 100, 255, 0.3)");
+  innerGlow.addColorStop(1, "rgba(100, 0, 200, 0)");
+  ctx.fillStyle = innerGlow;
+  ctx.fillRect(0, 0, size, size);
+
+  const texture = new THREE.CanvasTexture(diskCanvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createBlackHole() {
+  const group = new THREE.Group();
+  group.position.copy(BLACK_HOLE_POSITION);
+
+  // Event Horizon (pure black sphere)
+  const horizonGeom = new THREE.SphereGeometry(BLACK_HOLE_RADIUS, 48, 48);
+  const horizonMat = new THREE.MeshBasicMaterial({
+    color: 0x000000,
+    depthWrite: true,
+  });
+  const horizon = new THREE.Mesh(horizonGeom, horizonMat);
+  group.add(horizon);
+
+  // Photon sphere glow (faint ring of light just outside event horizon)
+  const photonGeom = new THREE.SphereGeometry(BLACK_HOLE_RADIUS * 1.08, 32, 32);
+  const photonMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color('#6622cc'),
+    transparent: true,
+    opacity: 0.15,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const photonSphere = new THREE.Mesh(photonGeom, photonMat);
+  group.add(photonSphere);
+
+  // Accretion Disk (tilted ring)
+  const diskGeom = new THREE.RingGeometry(BLACK_HOLE_RADIUS * 1.4, BLACK_HOLE_RADIUS * 4.5, 128, 1);
+  const diskMat = new THREE.MeshBasicMaterial({
+    map: createAccretionDiskTexture(),
+    transparent: true,
+    opacity: 0.85,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  const disk = new THREE.Mesh(diskGeom, diskMat);
+  disk.rotation.x = Math.PI * 0.42; // Tilted for dramatic angle
+  group.add(disk);
+
+  // Outer gravitational lensing glow
+  const lensGeom = new THREE.SphereGeometry(BLACK_HOLE_RADIUS * 3.5, 32, 32);
+  const lensMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color('#4400aa'),
+    transparent: true,
+    opacity: 0.06,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const lensGlow = new THREE.Mesh(lensGeom, lensMat);
+  group.add(lensGlow);
+
+  // Relativistic jet hints (faint beams above/below)
+  const jetGeom = new THREE.CylinderGeometry(0.3, 2, BLACK_HOLE_RADIUS * 8, 8, 1, true);
+  const jetMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color('#8844ff'),
+    transparent: true,
+    opacity: 0.08,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const jetUp = new THREE.Mesh(jetGeom, jetMat);
+  jetUp.position.y = BLACK_HOLE_RADIUS * 4.5;
+  group.add(jetUp);
+
+  const jetDown = new THREE.Mesh(jetGeom, jetMat.clone());
+  jetDown.position.y = -BLACK_HOLE_RADIUS * 4.5;
+  jetDown.rotation.z = Math.PI;
+  group.add(jetDown);
+
+  // Faint ambient light (very subtle purple glow)
+  const bhLight = new THREE.PointLight(0x6622cc, 4, 80, 2);
+  group.add(bhLight);
+
+  group.userData = {
+    disk,
+    photonSphere,
+    lensGlow,
+    jetUp,
+    jetDown,
+  };
+
+  scene.add(group);
+  return group;
+}
+
+function updateBlackHole(delta) {
+  if (!blackHoleGroup) return;
+
+  const ud = blackHoleGroup.userData;
+
+  // Rotate accretion disk
+  ud.disk.rotation.z += delta * 0.8;
+
+  // Pulse the photon sphere
+  const pulse = Math.sin(performance.now() * 0.003) * 0.5 + 0.5;
+  ud.photonSphere.material.opacity = 0.1 + pulse * 0.1;
+
+  // Pulse lens glow
+  ud.lensGlow.material.opacity = 0.04 + pulse * 0.04;
+
+  // Flicker jets
+  const jetPulse = Math.sin(performance.now() * 0.005) * 0.5 + 0.5;
+  ud.jetUp.material.opacity = 0.05 + jetPulse * 0.06;
+  ud.jetDown.material.opacity = 0.05 + jetPulse * 0.06;
+}
+
+function applyBlackHoleGravity(delta) {
+  if (!blackHoleGroup || blackHoleRespawnTimer > 0 || sunRespawnTimer > 0) return;
+
+  const dist = rocket.position.distanceTo(blackHoleGroup.position);
+
+  if (dist < BLACK_HOLE_GRAVITY_RADIUS && dist > BLACK_HOLE_KILL_RADIUS) {
+    // Gravity strength: inverse square, ramping up dramatically close
+    const normDist = (dist - BLACK_HOLE_KILL_RADIUS) / (BLACK_HOLE_GRAVITY_RADIUS - BLACK_HOLE_KILL_RADIUS);
+    const gravityStrength = (1 - normDist) * (1 - normDist) * 0.35;
+
+    bhPullVector.copy(blackHoleGroup.position).sub(rocket.position).normalize();
+    rocketVelocity.addScaledVector(bhPullVector, gravityStrength * delta * 60);
+
+    // Subtle camera warning when in pull range
+    if (dist < BLACK_HOLE_GRAVITY_RADIUS * 0.5 && blackHolePhase === 'none') {
+      updateStatus("⚠ Gravitational anomaly detected — pull increasing");
+    }
+  }
+
+  // Kill zone
+  if (dist < BLACK_HOLE_KILL_RADIUS) {
+    triggerBlackHoleDeath();
+  }
+}
+
+function triggerBlackHoleDeath() {
+  if (blackHoleRespawnTimer > 0 || sunRespawnTimer > 0) return;
+
+  isAutoPiloting = false;
+  autoPilotSection = null;
+  activeSection = null;
+  dockCandidate = null;
+  undockGraceSection = null;
+  undockGraceTime = 0;
+  keyboard.clear();
+  rocketVelocity.set(0, 0, 0);
+  setContent(null);
+  updateStatus("🕳 EVENT HORIZON CROSSED — STRUCTURAL INTEGRITY COMPROMISED");
+
+  blackHoleDeathTime = BLACK_HOLE_DEATH_DURATION;
+  blackHoleRespawnTimer = BLACK_HOLE_DEATH_DURATION;
+  blackHolePhase = 'pull';
+
+  // Spaghettification stretch on canvas
+  canvas.classList.add('bh-stretch');
+
+  // Black hole overlay
+  const bhOverlay = document.getElementById('black-hole-overlay');
+  if (bhOverlay) {
+    bhOverlay.classList.add('phase-pull');
+    bhOverlay.classList.remove('phase-horizon', 'phase-spaghetti', 'phase-void');
+  }
+
+  // Play spaghettification sound
+  SoundEngine.playSpaghettification();
+
+  // Dim bloom
+  savedBloomStrength = bloomPass.strength;
+  explosionBloomTarget = 0.15;
+}
+
+function updateBlackHoleDeath(delta) {
+  if (blackHoleDeathTime <= 0) return;
+
+  blackHoleDeathTime = Math.max(0, blackHoleDeathTime - delta);
+  blackHoleRespawnTimer = Math.max(0, blackHoleRespawnTimer - delta);
+
+  const bhOverlay = document.getElementById('black-hole-overlay');
+  const totalDuration = BLACK_HOLE_DEATH_DURATION;
+  const elapsed = totalDuration - blackHoleDeathTime;
+  const progress = elapsed / totalDuration;
+
+  // During death, pull rocket toward black hole center
+  if (blackHoleGroup && blackHoleDeathTime > 0) {
+    const pullSpeed = 2 + progress * 8;
+    bhPullVector.copy(blackHoleGroup.position).sub(rocket.position).normalize();
+    rocket.position.addScaledVector(bhPullVector, pullSpeed * delta);
+
+    // Spin the rocket increasingly
+    rocket.rotation.z += delta * (1 + progress * 8);
+    rocket.rotation.x += delta * (0.5 + progress * 3);
+  }
+
+  // Phase transitions: pull (0-0.2) → horizon (0.2-0.5) → spaghetti (0.5-0.8) → void (0.8-1.0)
+  if (bhOverlay) {
+    if (progress < 0.2) {
+      if (blackHolePhase !== 'pull') {
+        blackHolePhase = 'pull';
+        bhOverlay.classList.add('phase-pull');
+        bhOverlay.classList.remove('phase-horizon', 'phase-spaghetti', 'phase-void');
+      }
+      bhOverlay.style.opacity = `${progress / 0.2 * 0.4}`;
+      explosionBloomTarget = savedBloomStrength * (1 - progress / 0.2 * 0.7);
+    } else if (progress < 0.5) {
+      if (blackHolePhase !== 'horizon') {
+        blackHolePhase = 'horizon';
+        bhOverlay.classList.remove('phase-pull', 'phase-spaghetti', 'phase-void');
+        bhOverlay.classList.add('phase-horizon');
+        updateStatus("Crossing event horizon...");
+      }
+      const horizonProgress = (progress - 0.2) / 0.3;
+      bhOverlay.style.opacity = `${0.4 + horizonProgress * 0.3}`;
+      explosionBloomTarget = 0.1;
+    } else if (progress < 0.8) {
+      if (blackHolePhase !== 'spaghetti') {
+        blackHolePhase = 'spaghetti';
+        bhOverlay.classList.remove('phase-pull', 'phase-horizon', 'phase-void');
+        bhOverlay.classList.add('phase-spaghetti');
+        updateStatus("Tidal forces overwhelming...");
+      }
+      const spagProgress = (progress - 0.5) / 0.3;
+      bhOverlay.style.opacity = `${0.7 + spagProgress * 0.25}`;
+    } else {
+      if (blackHolePhase !== 'void') {
+        blackHolePhase = 'void';
+        bhOverlay.classList.remove('phase-pull', 'phase-horizon', 'phase-spaghetti');
+        bhOverlay.classList.add('phase-void');
+        updateStatus("...");
+      }
+      bhOverlay.style.opacity = `${0.95 + (progress - 0.8) / 0.2 * 0.05}`;
+      explosionBloomTarget = savedBloomStrength;
+    }
+  }
+
+  // Respawn when timer hits zero
+  if (blackHoleRespawnTimer <= 0) {
+    respawnFromBlackHole();
+  }
+}
+
+function respawnFromBlackHole() {
+  blackHoleDeathTime = 0;
+  blackHoleRespawnTimer = 0;
+  blackHolePhase = 'none';
+  explosionBloomTarget = savedBloomStrength;
+
+  canvas.classList.remove('bh-stretch');
+  // Reset any transform left from the animation
+  canvas.style.transform = '';
+
+  const bhOverlay = document.getElementById('black-hole-overlay');
+  if (bhOverlay) {
+    bhOverlay.style.opacity = '0';
+    bhOverlay.classList.remove('phase-pull', 'phase-horizon', 'phase-spaghetti', 'phase-void');
+  }
+
+  // Reuse the Earth respawn logic
+  if (!aboutSection) return;
+  keyboard.clear();
+  rocketVelocity.set(0, 0, 0);
+  zoomScale = minZoomScale;
+  dockWith(aboutSection);
+  rocket.rotation.set(0, 0, 0);
+  cameraPitch = 0.08;
+
+  updateStatus("⚠ Swallowed by the black hole. Respawned at Earth.");
+}
 
 /* --- Comet Easter Egg --- */
 function createComet() {
@@ -554,6 +1164,7 @@ const descriptionEl = document.getElementById("section-description");
 const pointsEl = document.getElementById("section-points");
 const infoCardEl = document.querySelector(".info-card");
 const sunBurnOverlay = document.getElementById("sun-burn-overlay");
+const blackHoleOverlay = document.getElementById("black-hole-overlay");
 const asteroidLabelsContainer = document.getElementById("asteroid-labels-container");
 const zoomInButton = document.getElementById("zoom-in");
 const zoomOutButton = document.getElementById("zoom-out");
@@ -1127,6 +1738,9 @@ let lastStatusText = "";
 let lastHudSyncTime = -Infinity;
 let sunBurnTime = 0;
 let sunRespawnTimer = 0;
+let sunBurnPhase = 'none'; // 'none' | 'flash' | 'burn' | 'blackout'
+let savedBloomStrength = 0.65;
+let explosionBloomTarget = 0.65;
 
 const HUD_SYNC_INTERVAL_MS = 125;
 
@@ -1725,6 +2339,9 @@ updateScannerMetrics();
 nebulaField = createNebulaField();
 scene.add(nebulaField);
 
+// --- Black Hole ---
+blackHoleGroup = createBlackHole();
+
 const dockableBodies = [...planets, sunGroup];
 
 function getPlanetGroup(section) {
@@ -1979,11 +2596,24 @@ function respawnAtEarth(isIncinerated = false) {
   cameraPitch = 0.08;
   sunBurnTime = 0;
   sunRespawnTimer = 0;
+  sunBurnPhase = 'none';
+  
+  blackHoleDeathTime = 0;
+  blackHoleRespawnTimer = 0;
+  blackHolePhase = 'none';
+  
+  explosionBloomTarget = savedBloomStrength;
   if (sunBurnOverlay) {
     sunBurnOverlay.style.opacity = "0";
+    sunBurnOverlay.classList.remove('phase-flash', 'phase-burn', 'phase-blackout', 'shake');
   }
+  if (blackHoleOverlay) {
+    blackHoleOverlay.style.opacity = '0';
+    blackHoleOverlay.classList.remove('phase-pull', 'phase-horizon', 'phase-spaghetti', 'phase-void');
+  }
+  canvas.classList.remove('shake', 'bh-stretch');
   if (isIncinerated) {
-    updateStatus("Incinerated by the Sun. Respawned at Earth.");
+    updateStatus("⚠ Incinerated by the Sun. Respawned at Earth.");
   }
 }
 
@@ -2001,9 +2631,27 @@ function triggerSunBurn() {
   keyboard.clear();
   rocketVelocity.set(0, 0, 0);
   setContent(null);
-  updateStatus("Solar incineration imminent");
-  sunBurnTime = 0.75;
-  sunRespawnTimer = 0.75;
+  updateStatus("☀ SOLAR INCINERATION IMMINENT");
+  sunBurnTime = SUN_BURN_DURATION;
+  sunRespawnTimer = SUN_BURN_DURATION;
+  sunBurnPhase = 'flash';
+
+  // Spawn 3D explosion at rocket position
+  createSunExplosion(rocket.position.clone());
+
+  // Spike bloom for dramatic white-out
+  savedBloomStrength = bloomPass.strength;
+  explosionBloomTarget = 3.5;
+
+  // Play explosion sound
+  SoundEngine.playExplosion();
+
+  // Screen shake
+  canvas.classList.add('shake');
+  if (sunBurnOverlay) {
+    sunBurnOverlay.classList.add('shake', 'phase-flash');
+    sunBurnOverlay.classList.remove('phase-burn', 'phase-blackout');
+  }
 }
 
 function isMobileMode() {
@@ -2318,7 +2966,7 @@ function updateTrail(now, delta) {
 
   /* ── Plume, flame & effects ── */
   const flicker = 0.92 + Math.sin(pulse) * 0.08;
-  const burnBoost = sunBurnTime > 0 ? 1 + (sunBurnTime / 0.75) * 2.2 : 1;
+  const burnBoost = sunBurnTime > 0 ? 1 + (sunBurnTime / SUN_BURN_DURATION) * 2.2 : 1;
   const plumeStrength = 1 + speed * 0.95;
   plumeOuter.scale.set(
     (1.15 + speed * 0.85) * burnBoost,
@@ -2699,9 +3347,60 @@ function tick(now) {
     }
   }
 
-  if (sunBurnOverlay) {
-    const burnProgress = sunBurnTime > 0 ? sunBurnTime / 0.75 : 0;
-    sunBurnOverlay.style.opacity = burnProgress > 0 ? `${0.18 + burnProgress * 0.72}` : "0";
+  // Update 3D explosion particles
+  updateSunExplosion(delta);
+
+  // Animate bloom intensity during explosion
+  bloomPass.strength = THREE.MathUtils.lerp(bloomPass.strength, explosionBloomTarget, 0.08);
+
+  // Multi-phase sun burn overlay
+  if (sunBurnOverlay && sunBurnTime > 0) {
+    const totalDuration = SUN_BURN_DURATION;
+    const elapsed = totalDuration - sunBurnTime;
+    const progress = elapsed / totalDuration;
+
+    // Phase transitions: flash (0-0.15) → burn (0.15-0.6) → blackout (0.6-1.0)
+    if (progress < 0.15) {
+      // FLASH phase: blinding white
+      if (sunBurnPhase !== 'flash') {
+        sunBurnPhase = 'flash';
+        sunBurnOverlay.classList.add('phase-flash');
+        sunBurnOverlay.classList.remove('phase-burn', 'phase-blackout');
+      }
+      const flashIntensity = progress < 0.05 ? progress / 0.05 : 1;
+      sunBurnOverlay.style.opacity = `${0.7 + flashIntensity * 0.3}`;
+      explosionBloomTarget = 2.0 + (1 - progress / 0.15) * 1.5;
+    } else if (progress < 0.6) {
+      // BURN phase: orange-red inferno
+      if (sunBurnPhase !== 'burn') {
+        sunBurnPhase = 'burn';
+        sunBurnOverlay.classList.remove('phase-flash', 'shake');
+        sunBurnOverlay.classList.add('phase-burn');
+        canvas.classList.remove('shake');
+      }
+      const burnProgress = (progress - 0.15) / 0.45;
+      sunBurnOverlay.style.opacity = `${0.85 + burnProgress * 0.1}`;
+      explosionBloomTarget = savedBloomStrength + (1 - burnProgress) * 1.0;
+    } else {
+      // BLACKOUT phase: fade to darkness
+      if (sunBurnPhase !== 'blackout') {
+        sunBurnPhase = 'blackout';
+        sunBurnOverlay.classList.remove('phase-flash', 'phase-burn', 'shake');
+        sunBurnOverlay.classList.add('phase-blackout');
+        canvas.classList.remove('shake');
+        updateStatus("Signal lost...");
+      }
+      const blackoutProgress = (progress - 0.6) / 0.4;
+      sunBurnOverlay.style.opacity = `${0.95 - blackoutProgress * 0.15}`;
+      explosionBloomTarget = savedBloomStrength;
+    }
+  } else if (sunBurnOverlay && sunBurnTime <= 0 && sunBurnPhase !== 'none') {
+    // Cleanup after burn complete
+    sunBurnOverlay.style.opacity = "0";
+    sunBurnOverlay.classList.remove('phase-flash', 'phase-burn', 'phase-blackout', 'shake');
+    canvas.classList.remove('shake');
+    sunBurnPhase = 'none';
+    explosionBloomTarget = savedBloomStrength;
   }
 
   stars.rotation.y += 0.00018;
@@ -2716,6 +3415,8 @@ function tick(now) {
     rocket.rotation.z += delta * 2.8;
     rocket.rotation.x = THREE.MathUtils.lerp(rocket.rotation.x, 0.8, 0.1);
     rocket.rotation.y += delta * 1.9;
+  } else if (blackHoleRespawnTimer > 0) {
+    // Black hole death handled in updateBlackHoleDeath
   } else if (isAutoPiloting) {
     handleAutoPilot(delta);
   } else {
@@ -2726,6 +3427,11 @@ function tick(now) {
   if (sunRespawnTimer <= 0 && rocket.position.distanceTo(sunGroup.position) < sunCollisionRadius) {
     triggerSunBurn();
   }
+
+  // Black hole gravity + collision
+  applyBlackHoleGravity(delta);
+  updateBlackHole(delta);
+  updateBlackHoleDeath(delta);
 
   resolvePlanetCollisions();
 

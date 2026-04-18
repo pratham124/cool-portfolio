@@ -70,9 +70,95 @@ body {
   z-index: 20;
   opacity: 0;
   background:
-    radial-gradient(circle at center, rgba(255, 246, 196, 0.95) 0, rgba(255, 173, 71, 0.82) 24%, rgba(255, 84, 24, 0.5) 52%, rgba(22, 6, 0, 0.08) 100%);
+    radial-gradient(circle at center, rgba(255, 255, 255, 1) 0%, rgba(255, 246, 196, 0.95) 8%, rgba(255, 173, 71, 0.82) 24%, rgba(255, 84, 24, 0.5) 52%, rgba(22, 6, 0, 0.08) 100%);
   mix-blend-mode: screen;
-  transition: opacity 120ms linear;
+  transition: opacity 80ms linear;
+}
+
+.sun-burn-overlay.phase-flash {
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 240, 0.98) 20%, rgba(255, 220, 140, 0.85) 50%, rgba(255, 120, 40, 0.4) 80%, transparent 100%);
+  mix-blend-mode: screen;
+}
+
+.sun-burn-overlay.phase-burn {
+  background:
+    radial-gradient(circle at center, rgba(255, 200, 80, 0.95) 0%, rgba(255, 100, 20, 0.85) 30%, rgba(200, 30, 0, 0.6) 60%, rgba(20, 0, 0, 0.9) 100%);
+  mix-blend-mode: normal;
+}
+
+.sun-burn-overlay.phase-blackout {
+  background: radial-gradient(circle at center, rgba(40, 8, 0, 0.95) 0%, rgba(0, 0, 0, 0.98) 60%);
+  mix-blend-mode: normal;
+}
+
+.sun-burn-overlay.shake {
+  animation: sun-shake 0.08s infinite alternate;
+}
+
+@keyframes sun-shake {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-4px, 2px); }
+  50% { transform: translate(3px, -3px); }
+  75% { transform: translate(-2px, -4px); }
+  100% { transform: translate(4px, 1px); }
+}
+
+.scene-canvas.shake {
+  animation: canvas-shake 0.06s infinite alternate;
+}
+
+@keyframes canvas-shake {
+  0% { transform: translate(0, 0) scale(1); }
+  20% { transform: translate(-3px, 2px) scale(1.003); }
+  40% { transform: translate(4px, -1px) scale(1.005); }
+  60% { transform: translate(-2px, -3px) scale(1.002); }
+  80% { transform: translate(3px, 3px) scale(1.004); }
+  100% { transform: translate(-1px, -2px) scale(1.001); }
+}
+
+.black-hole-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+  opacity: 0;
+  background: radial-gradient(circle at center, transparent 0%, rgba(20, 0, 40, 0.3) 30%, rgba(0, 0, 0, 0.9) 70%, rgba(0, 0, 0, 0.98) 100%);
+  transition: opacity 100ms linear;
+}
+
+.black-hole-overlay.phase-pull {
+  background: radial-gradient(circle at center, transparent 10%, rgba(40, 0, 80, 0.2) 35%, rgba(10, 0, 30, 0.6) 65%, rgba(0, 0, 0, 0.85) 100%);
+}
+
+.black-hole-overlay.phase-horizon {
+  background: radial-gradient(circle at center, rgba(120, 40, 255, 0.15) 0%, rgba(60, 0, 140, 0.5) 20%, rgba(0, 0, 0, 0.92) 55%, rgba(0, 0, 0, 0.99) 100%);
+  animation: bh-spiral 0.5s infinite linear;
+}
+
+.black-hole-overlay.phase-spaghetti {
+  background: radial-gradient(circle at center, rgba(180, 80, 255, 0.1) 0%, rgba(0, 0, 0, 0.98) 30%);
+}
+
+.black-hole-overlay.phase-void {
+  background: #000;
+}
+
+.scene-canvas.bh-stretch {
+  animation: bh-stretch 1.5s ease-in forwards;
+}
+
+@keyframes bh-spiral {
+  0% { filter: hue-rotate(0deg) brightness(1); }
+  50% { filter: hue-rotate(15deg) brightness(1.1); }
+  100% { filter: hue-rotate(0deg) brightness(1); }
+}
+
+@keyframes bh-stretch {
+  0% { transform: scale(1, 1); }
+  40% { transform: scale(0.92, 1.12); }
+  70% { transform: scale(0.8, 1.35); }
+  100% { transform: scale(0.4, 2.0); filter: brightness(0); }
 }
 
 .scene-canvas {
