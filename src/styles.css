@@ -20,7 +20,8 @@ body {
   height: 100dvh;
   min-height: 100dvh;
   overflow: hidden;
-  background:
+  background-color: var(--bg-top);
+  background-image:
     radial-gradient(circle at top, rgba(24, 59, 92, 0.55), transparent 34%),
     linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
   color: var(--text);
