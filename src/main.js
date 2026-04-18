@@ -295,11 +295,60 @@ function updateSpaceDust() {
 }
 
 /* --- Deep Space Nebulas --- */
+function createNebulaTexture(colors) {
+  const size = 512;
+  const textureCanvas = document.createElement("canvas");
+  textureCanvas.width = size;
+  textureCanvas.height = size;
+  const ctx = textureCanvas.getContext("2d");
+
+  ctx.clearRect(0, 0, size, size);
+  ctx.globalCompositeOperation = "lighter";
+
+  for (let index = 0; index < 9; index += 1) {
+    const radius = THREE.MathUtils.randFloat(size * 0.16, size * 0.34);
+    const x = THREE.MathUtils.randFloat(size * 0.18, size * 0.82);
+    const y = THREE.MathUtils.randFloat(size * 0.18, size * 0.82);
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    const innerColor = colors[index % colors.length];
+    const midColor = colors[(index + 1) % colors.length];
+    gradient.addColorStop(0, innerColor);
+    gradient.addColorStop(0.45, midColor);
+    gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  for (let index = 0; index < 90; index += 1) {
+    const radius = THREE.MathUtils.randFloat(1.5, 4.5);
+    ctx.fillStyle = `rgba(255, 255, 255, ${THREE.MathUtils.randFloat(0.015, 0.06)})`;
+    ctx.beginPath();
+    ctx.arc(Math.random() * size, Math.random() * size, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const texture = new THREE.CanvasTexture(textureCanvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  return texture;
+}
+
 function createNebulaField() {
   const group = new THREE.Group();
   const textures = [
-    textureLoader.load("/root/.gemini/antigravity/brain/f32fe163-0db4-4ab3-acba-99d76f7d8053/nebula_texture_1_1776503578944.png"),
-    textureLoader.load("/root/.gemini/antigravity/brain/f32fe163-0db4-4ab3-acba-99d76f7d8053/nebula_texture_2_1776503596828.png")
+    createNebulaTexture([
+      "rgba(110, 196, 255, 0.30)",
+      "rgba(95, 122, 255, 0.18)",
+      "rgba(255, 178, 122, 0.16)",
+    ]),
+    createNebulaTexture([
+      "rgba(149, 120, 255, 0.22)",
+      "rgba(102, 212, 255, 0.20)",
+      "rgba(255, 121, 157, 0.12)",
+    ]),
   ];
 
   for (let i = 0; i < 8; i++) {
@@ -360,74 +409,96 @@ function createScannerIcons() {
     
     el.onclick = () => {
         if (body.type === 'sun') {
-            beginAutoPilot({ title: "Sun", position: new THREE.Vector3(0,0,0), id: 'sun' }, true);
-        } else {
-            const targetSection = sections.find(s => s.id === body.id);
-            if (targetSection) beginAutoPilot(targetSection, true);
+            updateStatus("Sun autopilot disabled");
+            return;
         }
+
+        const targetSection = sections.find(s => s.id === body.id);
+        if (targetSection) beginAutoPilot(targetSection, true);
     };
 
-    return { name: body.name, el, arrow, id: body.id, color: body.color, type: body.type };
+    return {
+      name: body.name,
+      el,
+      arrow,
+      id: body.id,
+      color: body.color,
+      type: body.type,
+      target: body.type === "sun"
+        ? sunGroup
+        : planets.find((planetGroup) => planetGroup.userData.section.id === body.id) || null,
+      halfWidth: 22,
+      halfHeight: 22,
+      arrowOffset: 32,
+    };
   });
 }
 
 const scannerBodyPos = new THREE.Vector3();
-function updateScanner() {
+function updateScanner(bounds) {
   if (!scannerIcons || !camera) return;
 
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-  const centerX = width / 2;
-  const centerY = height / 2;
+  const activeBounds = bounds || getCanvasBounds();
+  if (!activeBounds.isVisible) {
+    scannerIcons.forEach((icon) => {
+      icon.el.style.opacity = "0";
+      icon.arrow.style.display = "none";
+    });
+    return;
+  }
+
+  const width = activeBounds.width;
+  const height = activeBounds.height;
+  const centerX = activeBounds.centerX;
+  const centerY = activeBounds.centerY;
   const margin = 45;
 
   scannerIcons.forEach(icon => {
-    let targetObj;
-    if (icon.type === "sun") {
-        targetObj = sunGroup;
-    } else {
-        targetObj = getPlanetGroup(sections.find(s => s.id === icon.id));
-    }
-
+    const targetObj = icon.target;
     if (!targetObj) return;
 
     targetObj.getWorldPosition(scannerBodyPos);
-    const pos = scannerBodyPos.clone().project(camera);
-    
-    const x = (pos.x * 0.5 + 0.5) * width;
-    const y = -(pos.y * 0.5 - 0.5) * height;
-    
+    const pos = scannerProjectedPosition.copy(scannerBodyPos).project(camera);
+
+    const x = activeBounds.left + (pos.x * 0.5 + 0.5) * width;
+    const y = activeBounds.top + (-(pos.y * 0.5 - 0.5)) * height;
+
     const isBehind = pos.z > 1;
-    const isOffscreen = isBehind || x < margin || x > width - margin || y < margin || y > height - margin;
+    const isOffscreen =
+      isBehind ||
+      x < activeBounds.left + margin ||
+      x > activeBounds.right - margin ||
+      y < activeBounds.top + margin ||
+      y > activeBounds.bottom - margin;
 
     if (isOffscreen) {
       let edgeX = x;
       let edgeY = y;
-      
+
       if (isBehind) {
-          edgeX = width - x;
-          edgeY = height - y;
+          edgeX = activeBounds.left + activeBounds.right - x;
+          edgeY = activeBounds.top + activeBounds.bottom - y;
       }
 
       const dx = edgeX - centerX;
       const dy = edgeY - centerY;
       const angle = Math.atan2(dy, dx);
-      
+
       const cos = Math.cos(angle);
       const sin = Math.sin(angle);
-      
+
       const boxWidth = width - margin * 2;
       const boxHeight = height - margin * 2;
       const scale = Math.min(boxWidth/2 / Math.abs(cos), boxHeight/2 / Math.abs(sin));
-      
-      icon.el.style.transform = `translate(${centerX + cos * scale - 22}px, ${centerY + sin * scale - 22}px)`;
+
+      icon.el.style.transform = `translate(${centerX + cos * scale - icon.halfWidth}px, ${centerY + sin * scale - icon.halfHeight}px)`;
       icon.el.style.opacity = "0.6";
-      
+
       icon.arrow.style.display = "block";
-      icon.arrow.style.transform = `translate(${centerX + cos * (scale - 32)}px, ${centerY + sin * (scale - 32)}px) rotate(${angle + Math.PI/2}rad)`;
+      icon.arrow.style.transform = `translate(${centerX + cos * (scale - icon.arrowOffset)}px, ${centerY + sin * (scale - icon.arrowOffset)}px) rotate(${angle + Math.PI/2}rad)`;
       icon.arrow.style.color = icon.color;
     } else {
-      icon.el.style.transform = `translate(${x - 22}px, ${y - 22}px)`;
+      icon.el.style.transform = `translate(${x - icon.halfWidth}px, ${y - icon.halfHeight}px)`;
       icon.el.style.opacity = "1";
       icon.arrow.style.display = "none";
     }
@@ -483,6 +554,7 @@ const descriptionEl = document.getElementById("section-description");
 const pointsEl = document.getElementById("section-points");
 const infoCardEl = document.querySelector(".info-card");
 const sunBurnOverlay = document.getElementById("sun-burn-overlay");
+const asteroidLabelsContainer = document.getElementById("asteroid-labels-container");
 const zoomInButton = document.getElementById("zoom-in");
 const zoomOutButton = document.getElementById("zoom-out");
 
@@ -496,6 +568,7 @@ const cameraLookOffset = new THREE.Vector3(0, 1.15, 0);
 const movementBoundsMin = new THREE.Vector3(-1200, -250, -1200);
 const movementBoundsMax = new THREE.Vector3(1200, 250, 1200);
 const asteroidLabelWorldPosition = new THREE.Vector3();
+const scannerProjectedPosition = new THREE.Vector3();
 const trailCamUp = new THREE.Vector3(0, 1, 0);
 const trailSegmentDirection = new THREE.Vector3();
 const trailPerpendicular = new THREE.Vector3();
@@ -516,8 +589,72 @@ let scannerIcons = null;
 let nebulaField = null;
 let planetIconsCreated = false;
 
-const scannerUpdateInterval = 16; 
+const desktopScannerUpdateInterval = 32;
+const reducedScannerUpdateInterval = 72;
+let currentScannerUpdateInterval = desktopScannerUpdateInterval;
 let lastScannerUpdateTime = 0;
+let lastTrailGeometryUpdateTime = 0;
+
+function getCanvasBounds() {
+  const rect = canvas.getBoundingClientRect();
+  const width = rect.width || window.innerWidth;
+  const height = rect.height || window.innerHeight;
+
+  return {
+    left: rect.left,
+    top: rect.top,
+    width,
+    height,
+    right: rect.left + width,
+    bottom: rect.top + height,
+    centerX: rect.left + width / 2,
+    centerY: rect.top + height / 2,
+    isVisible:
+      width > 0 &&
+      height > 0 &&
+      rect.bottom > 0 &&
+      rect.right > 0 &&
+      rect.left < window.innerWidth &&
+      rect.top < window.innerHeight,
+  };
+}
+
+function resolveSectionFromObject(object) {
+  let current = object;
+  while (current) {
+    if (current.userData?.section) {
+      return current.userData.section;
+    }
+    current = current.parent;
+  }
+  return null;
+}
+
+function updateScannerMetrics() {
+  if (!scannerIcons) {
+    return;
+  }
+
+  scannerIcons.forEach((icon) => {
+    const width = icon.el.offsetWidth || 44;
+    const height = icon.el.offsetHeight || 44;
+    icon.halfWidth = width / 2;
+    icon.halfHeight = height / 2;
+    icon.arrowOffset = Math.max(icon.halfHeight + 10, 24);
+  });
+}
+
+function getTargetAsteroidCount() {
+  if (pointerQuery.matches || currentLayout === LAYOUT_PRESETS.mobile) {
+    return 2500;
+  }
+
+  if (currentLayout === LAYOUT_PRESETS.tablet) {
+    return 4500;
+  }
+
+  return 8000;
+}
 
 const renderer = new THREE.WebGLRenderer({
   canvas,
@@ -590,7 +727,7 @@ function createDeepSpaceLabel(name, fact) {
     <span style="font-family: 'Courier New', monospace; font-size: 0.85rem; color: #6cb7ff;">Distance: ${fact}</span>
   `;
 
-  document.getElementById('asteroid-labels-container').appendChild(container);
+  asteroidLabelsContainer?.appendChild(container);
   return container;
 }
 
@@ -599,6 +736,9 @@ voyager1.position.set(600, 200, -700);
 voyager1.rotation.set(0.5, 0.2, 0.1);
 const voyager1Label = createDeepSpaceLabel("Voyager 1", "24.4 Billion km");
 voyager1.userData.label = voyager1Label;
+voyager1.userData.labelSpan = voyager1Label.querySelector("span");
+voyager1.userData.arrow = voyager1Label.querySelector(".offscreen-arrow");
+voyager1.userData.tether = voyager1Label.querySelector(".hud-tether");
 scene.add(voyager1);
 
 const voyager2 = createVoyagerModel("Voyager 2");
@@ -606,7 +746,11 @@ voyager2.position.set(-800, -150, 700);
 voyager2.rotation.set(-0.3, 0.5, -0.4);
 const voyager2Label = createDeepSpaceLabel("Voyager 2", "20.3 Billion km");
 voyager2.userData.label = voyager2Label;
+voyager2.userData.labelSpan = voyager2Label.querySelector("span");
+voyager2.userData.arrow = voyager2Label.querySelector(".offscreen-arrow");
+voyager2.userData.tether = voyager2Label.querySelector(".hud-tether");
 scene.add(voyager2);
+const voyagers = [voyager1, voyager2];
 scene.fog = new THREE.Fog(0x020612, 100, 1200);
 
 const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 2000);
@@ -948,6 +1092,7 @@ exhaustHalo.position.x = -1.55;
 rocket.add(exhaustHalo);
 
 rocket.position.set(0, 0, 0);
+rocket.scale.setScalar(0.8);
 rocket.rotation.y = 0;
 scene.add(rocket);
 
@@ -1017,6 +1162,7 @@ const ribbonMaterial = new THREE.MeshBasicMaterial({
   blending: THREE.AdditiveBlending,
 });
 const ribbonMesh = new THREE.Mesh(ribbonGeometry, ribbonMaterial);
+ribbonMesh.frustumCulled = false;
 scene.add(ribbonMesh);
 
 /* ── Smoke particles ── */
@@ -1061,6 +1207,16 @@ for (let i = 0; i < smokeCount; i++) {
 }
 
 let smokeSpawnTimer = 0;
+
+function clearSmokeParticles() {
+  smokeParticles.forEach((particle) => {
+    particle.active = false;
+    particle.life = 0;
+    particle.maxLife = 0;
+    particle.sprite.material.opacity = 0;
+    particle.sprite.scale.setScalar(0.01);
+  });
+}
 
 const exhaustPlume = new THREE.Group();
 const plumeOuter = new THREE.Mesh(
@@ -1510,7 +1666,7 @@ function createPlanet(section, isInteractive = true) {
     const labelTitle = section.title === "Sun" ? "Solar Probe" : "Astronomy Fact";
     labelDiv.innerHTML = `<em style="display: block; margin-bottom: 6px; color: #a3c2ff; font-size: 0.7rem; font-style: normal; letter-spacing: 0.05em; text-transform: uppercase;">${labelTitle}</em>${section.funFact}`;
 
-    document.getElementById('asteroid-labels-container').appendChild(labelDiv);
+    asteroidLabelsContainer?.appendChild(labelDiv);
 
     asteroidData = {
       group: asteroidGroup,
@@ -1531,8 +1687,12 @@ function createPlanet(section, isInteractive = true) {
   };
   scene.add(group);
   if (isInteractive) {
+    const interactiveTargets = [planet, glow, ring, corona];
+    if (moonGroup) {
+      interactiveTargets.push(...moonGroup.children);
+    }
     planets.push(group);
-    clickablePlanets.push(planet);
+    clickablePlanets.push(...interactiveTargets.filter(Boolean));
   }
 
   return group;
@@ -1560,9 +1720,12 @@ spaceDust = createSpaceDust();
 scene.add(spaceDust);
 
 scannerIcons = createScannerIcons();
+updateScannerMetrics();
 
 nebulaField = createNebulaField();
 scene.add(nebulaField);
+
+const dockableBodies = [...planets, sunGroup];
 
 function getPlanetGroup(section) {
   if (section?.id === 'sun') return sunGroup;
@@ -1646,7 +1809,7 @@ function setContent(section, customText) {
   const items = section
     ? (Array.isArray(section.facts) ? section.facts : [])
     : [
-      ["Desktop", "Use the keypad or keyboard to steer manually, or click a planet to travel there."],
+      ["Desktop", "Use the arrow keys to steer manually, or click a planet to travel there."],
       ["Mobile", "Tap a planet to travel there, then use the zoom buttons to adjust your distance."],
       ["Scene", "A 3D universe with textured solar-system bodies and a chase camera behind the rocket."],
       ["Portfolio", "Swap placeholder copy with your real story, experience, and contact links."],
@@ -1742,6 +1905,10 @@ function updateStatus(text) {
 
 function beginAutoPilot(section, isManualTrigger = false) {
   if (!section) return;
+  if (section.id === "sun") {
+    updateStatus("Sun autopilot disabled");
+    return;
+  }
 
   if (activeSection && activeSection.id !== section.id) {
     undockGraceSection = activeSection;
@@ -1768,6 +1935,11 @@ function beginAutoPilot(section, isManualTrigger = false) {
 }
 
 function dockWith(section) {
+  if (!section || section.id === "sun") {
+    updateStatus("Sun docking disabled");
+    return;
+  }
+
   const { dockRadius: targetDockRadius } = getPlanetDockMetrics(section);
   activeSection = section;
   autoPilotSection = null;
@@ -1838,14 +2010,16 @@ function isMobileMode() {
   return mobileQuery.matches || pointerQuery.matches;
 }
 
-function updateDockCandidate() {
+function updateDockCandidate(bounds, now) {
+  const activeBounds = bounds || getCanvasBounds();
+  const pulseTime = now * 0.0012;
   let nearest = null;
   let nearestDistance = Number.POSITIVE_INFINITY;
 
-  [...planets, sunGroup].forEach((planetGroup, index) => {
+  dockableBodies.forEach((planetGroup, index) => {
     const section = planetGroup.userData.section;
     const distance = rocket.position.distanceTo(planetGroup.position);
-    const pulse = 0.5 + Math.sin(performance.now() * 0.0012 + index) * 0.12;
+    const pulse = 0.5 + Math.sin(pulseTime + index) * 0.12;
     const { undockRadius: effectiveUndockRadius } = getPlanetDockMetrics(section);
     const revealRange = planetGroup.userData.section.id === "sun" ? 45 : 18;
     const factRevealRadius = effectiveUndockRadius + revealRange * sceneScaleFactor;
@@ -1873,22 +2047,29 @@ function updateDockCandidate() {
       ast.mesh.rotation.x += 0.004;
       ast.mesh.rotation.y += 0.005;
 
-      if (distance < factRevealRadius) {
+      if (distance < factRevealRadius && activeBounds.isVisible) {
         ast.mesh.getWorldPosition(asteroidLabelWorldPosition);
         asteroidLabelWorldPosition.project(camera);
 
-        const x = (asteroidLabelWorldPosition.x * 0.5 + 0.5) * window.innerWidth;
-        const y = -(asteroidLabelWorldPosition.y * 0.5 - 0.5) * window.innerHeight;
+        const x = activeBounds.left + (asteroidLabelWorldPosition.x * 0.5 + 0.5) * activeBounds.width;
+        const y = activeBounds.top + (-(asteroidLabelWorldPosition.y * 0.5 - 0.5)) * activeBounds.height;
+        const isOnCanvas =
+          asteroidLabelWorldPosition.z >= -1 &&
+          asteroidLabelWorldPosition.z <= 1 &&
+          x >= activeBounds.left &&
+          x <= activeBounds.right &&
+          y >= activeBounds.top &&
+          y <= activeBounds.bottom;
 
         ast.label.style.left = `${x}px`;
         ast.label.style.top = `${y}px`;
-        ast.label.style.opacity = distance < factFullOpacityRadius ? "1" : "0";
+        ast.label.style.opacity = isOnCanvas && distance < factFullOpacityRadius ? "1" : "0";
       } else {
         ast.label.style.opacity = "0";
       }
     }
 
-    if (distance < nearestDistance) {
+    if (section.id !== "sun" && distance < nearestDistance) {
       nearest = section;
       nearestDistance = distance;
     }
@@ -1933,21 +2114,21 @@ function handleDesktopMovement(delta) {
   const drag = 0.92;
   const liftSpeed = keyboard.has("Shift") ? 32.0 : 12.0;
 
-  if (keyboard.has("ArrowLeft") || keyboard.has("a") || keyboard.has("4")) {
+  if (keyboard.has("ArrowLeft")) {
     rocket.rotation.y -= yawRate;
   }
 
-  if (keyboard.has("ArrowRight") || keyboard.has("d") || keyboard.has("6")) {
+  if (keyboard.has("ArrowRight")) {
     rocket.rotation.y += yawRate;
   }
 
-  if (keyboard.has("ArrowUp") || keyboard.has("w") || keyboard.has("8")) {
+  if (keyboard.has("ArrowUp")) {
     forwardDirection.set(1, 0, 0);
     forwardDirection.applyAxisAngle(yAxis, rocket.rotation.y);
     rocketVelocity.add(forwardDirection.multiplyScalar(thrust * delta));
   }
 
-  if (keyboard.has("ArrowDown") || keyboard.has("s") || keyboard.has("2")) {
+  if (keyboard.has("ArrowDown")) {
     forwardDirection.set(-1, 0, 0);
     forwardDirection.applyAxisAngle(yAxis, rocket.rotation.y);
     rocketVelocity.add(forwardDirection.multiplyScalar(thrust * 0.55 * delta));
@@ -1961,17 +2142,17 @@ function handleDesktopMovement(delta) {
     rocket.position.y -= liftSpeed * delta;
   }
 
-  if (keyboard.has("9")) {
+  if (keyboard.has("1")) {
     rocket.position.y += liftSpeed * delta;
   }
 
-  if (keyboard.has("3")) {
+  if (keyboard.has("2")) {
     rocket.position.y -= liftSpeed * delta;
   }
 
   let verticalInput = 0;
-  if (keyboard.has("q") || keyboard.has("9")) verticalInput += 1;
-  if (keyboard.has("elevdown") || keyboard.has("3")) verticalInput -= 1;
+  if (keyboard.has("q") || keyboard.has("1")) verticalInput += 1;
+  if (keyboard.has("elevdown") || keyboard.has("2")) verticalInput -= 1;
   const targetPitch = verticalInput * 0.44;
 
   rocket.rotation.z = THREE.MathUtils.lerp(rocket.rotation.z, rocketVelocity.length() * 0.02, 0.08);
@@ -2017,98 +2198,123 @@ function handleAutoPilot(delta) {
   flame.material.opacity = 0.95;
 }
 
-function updateTrail() {
-  const delta = Math.min((performance.now() - lastTime) / 1000, 0.05) || 0.016;
-
+function updateTrail(now, delta) {
   trailAnchor.set(-1.65, 0, 0);
   trailAnchor.applyAxisAngle(yAxis, rocket.rotation.y);
   trailAnchor.add(rocket.position);
 
-  for (let index = trailLength - 1; index > 0; index -= 1) {
-    trailPoints[index].lerp(trailPoints[index - 1], 0.78);
-  }
-
   const speed = Math.min(rocketVelocity.length() * 0.9 + (isAutoPiloting ? 0.7 : 0), 1.2);
-  trailPoints[0].lerp(trailAnchor, 0.34 + speed * 0.2);
+  const shouldRenderTrail = speed > 0.08 || isAutoPiloting || sunBurnTime > 0;
+  const canUseHeavyEffects = usePostProcessing;
+  const shouldUpdateGeometry =
+    shouldRenderTrail &&
+    (canUseHeavyEffects || now - lastTrailGeometryUpdateTime >= 33);
+
+  if (!shouldRenderTrail) {
+    ribbonMesh.visible = false;
+    if (smokeGroup.visible) {
+      clearSmokeParticles();
+    }
+    smokeGroup.visible = false;
+    for (let index = 0; index < trailLength; index += 1) {
+      trailPoints[index].copy(trailAnchor);
+    }
+  } else {
+    ribbonMesh.visible = true;
+    for (let index = trailLength - 1; index > 0; index -= 1) {
+      trailPoints[index].lerp(trailPoints[index - 1], 0.78);
+    }
+    trailPoints[0].lerp(trailAnchor, 0.34 + speed * 0.2);
+  }
 
   /* ── Ribbon geometry ── */
-  const pulse = performance.now() * 0.03;
+  const pulse = now * 0.03;
 
-  for (let i = 0; i < ribbonSegments; i++) {
-    const t = i / (ribbonSegments - 1);
-    const baseWidth = (0.35 + speed * 0.45) * (1 - t * t);
-    const turbulence = Math.sin(pulse * 1.2 + i * 0.7) * 0.06 * (1 - t);
-    const width = Math.max(baseWidth + turbulence, 0);
+  if (shouldUpdateGeometry) {
+    for (let i = 0; i < ribbonSegments; i++) {
+      const t = i / (ribbonSegments - 1);
+      const baseWidth = (0.35 + speed * 0.45) * (1 - t * t);
+      const turbulence = canUseHeavyEffects ? Math.sin(pulse * 1.2 + i * 0.7) * 0.06 * (1 - t) : 0;
+      const width = Math.max(baseWidth + turbulence, 0);
 
-    if (i < ribbonSegments - 1) {
-      trailSegmentDirection.copy(trailPoints[i + 1]).sub(trailPoints[i]).normalize();
+      if (i < ribbonSegments - 1) {
+        trailSegmentDirection.copy(trailPoints[i + 1]).sub(trailPoints[i]).normalize();
+      }
+      trailPerpendicular.crossVectors(trailSegmentDirection, trailCamUp).normalize().multiplyScalar(width);
+
+      const vi = i * 6;
+      ribbonPositions[vi] = trailPoints[i].x + trailPerpendicular.x;
+      ribbonPositions[vi + 1] = trailPoints[i].y + trailPerpendicular.y;
+      ribbonPositions[vi + 2] = trailPoints[i].z + trailPerpendicular.z;
+      ribbonPositions[vi + 3] = trailPoints[i].x - trailPerpendicular.x;
+      ribbonPositions[vi + 4] = trailPoints[i].y - trailPerpendicular.y;
+      ribbonPositions[vi + 5] = trailPoints[i].z - trailPerpendicular.z;
+
+      const ci = i * 8;
+      const alpha = (1 - t * t) * (0.25 + speed * 0.55);
+      const r = THREE.MathUtils.lerp(1.0, 0.95, t);
+      const g = THREE.MathUtils.lerp(0.75, 0.3, t);
+      const b = THREE.MathUtils.lerp(0.35, 0.08, t);
+      ribbonColors[ci] = r;
+      ribbonColors[ci + 1] = g;
+      ribbonColors[ci + 2] = b;
+      ribbonColors[ci + 3] = alpha;
+      ribbonColors[ci + 4] = r;
+      ribbonColors[ci + 5] = g;
+      ribbonColors[ci + 6] = b;
+      ribbonColors[ci + 7] = alpha;
     }
-    trailPerpendicular.crossVectors(trailSegmentDirection, trailCamUp).normalize().multiplyScalar(width);
 
-    const vi = i * 6;
-    ribbonPositions[vi] = trailPoints[i].x + trailPerpendicular.x;
-    ribbonPositions[vi + 1] = trailPoints[i].y + trailPerpendicular.y;
-    ribbonPositions[vi + 2] = trailPoints[i].z + trailPerpendicular.z;
-    ribbonPositions[vi + 3] = trailPoints[i].x - trailPerpendicular.x;
-    ribbonPositions[vi + 4] = trailPoints[i].y - trailPerpendicular.y;
-    ribbonPositions[vi + 5] = trailPoints[i].z - trailPerpendicular.z;
-
-    const ci = i * 8;
-    const alpha = (1 - t * t) * (0.25 + speed * 0.55);
-    const r = THREE.MathUtils.lerp(1.0, 0.95, t);
-    const g = THREE.MathUtils.lerp(0.75, 0.3, t);
-    const b = THREE.MathUtils.lerp(0.35, 0.08, t);
-    ribbonColors[ci] = r;
-    ribbonColors[ci + 1] = g;
-    ribbonColors[ci + 2] = b;
-    ribbonColors[ci + 3] = alpha;
-    ribbonColors[ci + 4] = r;
-    ribbonColors[ci + 5] = g;
-    ribbonColors[ci + 6] = b;
-    ribbonColors[ci + 7] = alpha;
+    ribbonGeometry.attributes.position.needsUpdate = true;
+    ribbonGeometry.attributes.color.needsUpdate = true;
+    lastTrailGeometryUpdateTime = now;
   }
-
-  ribbonGeometry.attributes.position.needsUpdate = true;
-  ribbonGeometry.attributes.color.needsUpdate = true;
 
   /* ── Smoke particles ── */
-  smokeSpawnTimer += delta;
-  const spawnInterval = speed > 0.15 ? 0.03 : 0.08;
-
-  if (smokeSpawnTimer >= spawnInterval) {
-    smokeSpawnTimer = 0;
-    const inactive = smokeParticles.find((p) => !p.active);
-    if (inactive) {
-      inactive.active = true;
-      inactive.life = 0;
-      inactive.maxLife = 1.2 + Math.random() * 1.2;
-      inactive.sprite.position.copy(trailAnchor);
-      smokeBackDirection.set(-1, 0, 0).applyAxisAngle(yAxis, rocket.rotation.y);
-      inactive.velocity.copy(smokeBackDirection).multiplyScalar(1.5 + speed * 2.5);
-      inactive.velocity.x += (Math.random() - 0.5) * 0.8;
-      inactive.velocity.y += (Math.random() - 0.5) * 0.6;
-      inactive.velocity.z += (Math.random() - 0.5) * 0.8;
+  smokeGroup.visible = canUseHeavyEffects && shouldRenderTrail;
+  if (!smokeGroup.visible) {
+    if (smokeParticles.some((particle) => particle.active)) {
+      clearSmokeParticles();
     }
+  } else {
+    smokeSpawnTimer += delta;
+    const spawnInterval = speed > 0.15 ? 0.03 : 0.08;
+
+    if (smokeSpawnTimer >= spawnInterval) {
+      smokeSpawnTimer = 0;
+      const inactive = smokeParticles.find((p) => !p.active);
+      if (inactive) {
+        inactive.active = true;
+        inactive.life = 0;
+        inactive.maxLife = 1.2 + Math.random() * 1.2;
+        inactive.sprite.position.copy(trailAnchor);
+        smokeBackDirection.set(-1, 0, 0).applyAxisAngle(yAxis, rocket.rotation.y);
+        inactive.velocity.copy(smokeBackDirection).multiplyScalar(1.5 + speed * 2.5);
+        inactive.velocity.x += (Math.random() - 0.5) * 0.8;
+        inactive.velocity.y += (Math.random() - 0.5) * 0.6;
+        inactive.velocity.z += (Math.random() - 0.5) * 0.8;
+      }
+    }
+
+    smokeParticles.forEach((p) => {
+      if (!p.active) return;
+      p.life += delta;
+      const t = p.life / p.maxLife;
+      if (t >= 1) {
+        p.active = false;
+        p.sprite.material.opacity = 0;
+        p.sprite.scale.setScalar(0.01);
+        return;
+      }
+      p.sprite.position.addScaledVector(p.velocity, delta);
+      p.velocity.multiplyScalar(0.97);
+      const size = (0.3 + speed * 0.5) * (0.3 + t * 2.5);
+      p.sprite.scale.setScalar(size);
+      const fadeIn = Math.min(t * 8, 1);
+      const fadeOut = 1 - t * t;
+      p.sprite.material.opacity = fadeIn * fadeOut * (0.2 + speed * 0.35);
+    });
   }
-
-  smokeParticles.forEach((p) => {
-    if (!p.active) return;
-    p.life += delta;
-    const t = p.life / p.maxLife;
-    if (t >= 1) {
-      p.active = false;
-      p.sprite.material.opacity = 0;
-      p.sprite.scale.setScalar(0.01);
-      return;
-    }
-    p.sprite.position.addScaledVector(p.velocity, delta);
-    p.velocity.multiplyScalar(0.97);
-    const size = (0.3 + speed * 0.5) * (0.3 + t * 2.5);
-    p.sprite.scale.setScalar(size);
-    const fadeIn = Math.min(t * 8, 1);
-    const fadeOut = 1 - t * t;
-    p.sprite.material.opacity = fadeIn * fadeOut * (0.2 + speed * 0.35);
-  });
 
   /* ── Plume, flame & effects ── */
   const flicker = 0.92 + Math.sin(pulse) * 0.08;
@@ -2213,7 +2419,7 @@ function resolvePlanetCollisions() {
   });
 }
 
-function syncHud(now) {
+function syncHud(now, bounds) {
   if (now - lastHudSyncTime < HUD_SYNC_INTERVAL_MS) {
     return;
   }
@@ -2225,8 +2431,8 @@ function syncHud(now) {
   const dist2 = (voyagerStartDist2 + elapsed * voyagerSpeed2).toLocaleString();
   const voyager1DistanceText = `Distance from Earth: ${dist1} km`;
   const voyager2DistanceText = `Distance from Earth: ${dist2} km`;
-  const voyager1Span = voyager1.userData.label.querySelector("span");
-  const voyager2Span = voyager2.userData.label.querySelector("span");
+  const voyager1Span = voyager1.userData.labelSpan;
+  const voyager2Span = voyager2.userData.labelSpan;
 
   if (voyager1Span && voyager1Span.textContent !== voyager1DistanceText) {
     voyager1Span.textContent = voyager1DistanceText;
@@ -2239,10 +2445,18 @@ function syncHud(now) {
     voyagerFrustumMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse),
   );
 
-  [voyager1, voyager2].forEach((voyager) => {
+  const activeBounds = bounds || getCanvasBounds();
+  if (!activeBounds.isVisible) {
+    voyagers.forEach((voyager) => {
+      voyager.userData.label.style.opacity = "0";
+    });
+    return;
+  }
+
+  voyagers.forEach((voyager) => {
     const label = voyager.userData.label;
-    const arrow = label.querySelector(".offscreen-arrow");
-    const tether = label.querySelector(".hud-tether");
+    const arrow = voyager.userData.arrow;
+    const tether = voyager.userData.tether;
     const distToRocket = voyager.position.distanceTo(rocket.position);
 
     if (distToRocket > 350) {
@@ -2254,8 +2468,8 @@ function syncHud(now) {
 
     if (voyagerFrustum.containsPoint(voyagerWorldPosition)) {
       voyagerProjectedPosition.copy(voyagerWorldPosition).project(camera);
-      const x = (voyagerProjectedPosition.x * 0.5 + 0.5) * window.innerWidth;
-      const y = -(voyagerProjectedPosition.y * 0.5 - 0.5) * window.innerHeight;
+      const x = activeBounds.left + (voyagerProjectedPosition.x * 0.5 + 0.5) * activeBounds.width;
+      const y = activeBounds.top + (-(voyagerProjectedPosition.y * 0.5 - 0.5)) * activeBounds.height;
 
       label.style.left = `${x + 60}px`;
       label.style.top = `${y}px`;
@@ -2272,14 +2486,14 @@ function syncHud(now) {
     }
 
     voyagerProjectedPosition.copy(voyagerWorldPosition).project(camera);
-    const margin = 120;
+    const margin = Math.min(120, Math.max(48, Math.min(activeBounds.width, activeBounds.height) * 0.18));
     const x = Math.max(
-      margin,
-      Math.min(window.innerWidth - margin, (voyagerProjectedPosition.x * 0.5 + 0.5) * window.innerWidth),
+      activeBounds.left + margin,
+      Math.min(activeBounds.right - margin, activeBounds.left + (voyagerProjectedPosition.x * 0.5 + 0.5) * activeBounds.width),
     );
     const y = Math.max(
-      margin,
-      Math.min(window.innerHeight - margin, -(voyagerProjectedPosition.y * 0.5 - 0.5) * window.innerHeight),
+      activeBounds.top + margin,
+      Math.min(activeBounds.bottom - margin, activeBounds.top + (-(voyagerProjectedPosition.y * 0.5 - 0.5)) * activeBounds.height),
     );
 
     label.style.left = `${x}px`;
@@ -2288,7 +2502,7 @@ function syncHud(now) {
 
     if (arrow) {
       arrow.style.display = "block";
-      arrow.style.transform = `translateY(-50%) rotate(${Math.atan2(y - window.innerHeight / 2, x - window.innerWidth / 2)}rad)`;
+      arrow.style.transform = `translateY(-50%) rotate(${Math.atan2(y - activeBounds.centerY, x - activeBounds.centerX)}rad)`;
     }
     if (tether) {
       tether.style.display = "none";
@@ -2297,12 +2511,18 @@ function syncHud(now) {
 }
 
 function updateRenderQuality(width, height) {
-  const isReducedQuality = pointerQuery.matches || currentLayout !== LAYOUT_PRESETS.desktop;
-  const pixelRatioCap = isReducedQuality ? 1.25 : 2;
+  const isDesktopQuality =
+    !pointerQuery.matches &&
+    currentLayout === LAYOUT_PRESETS.desktop &&
+    width >= 1100 &&
+    height >= 700;
+  const pixelRatioCap = isDesktopQuality ? 1.5 : 1;
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap));
-  usePostProcessing = !isReducedQuality;
+  usePostProcessing = isDesktopQuality;
   bloomPass.enabled = usePostProcessing;
+  asteroidBelt.count = getTargetAsteroidCount();
+  currentScannerUpdateInterval = usePostProcessing ? desktopScannerUpdateInterval : reducedScannerUpdateInterval;
 
   if (usePostProcessing) {
     composer.setSize(width, height);
@@ -2323,6 +2543,7 @@ function resize() {
   camera.updateProjectionMatrix();
   updateRenderQuality(width, height);
   renderer.setSize(width, height, false);
+  updateScannerMetrics();
 }
 
 window.addEventListener("resize", resize);
@@ -2435,7 +2656,7 @@ canvas.addEventListener("pointerup", (event) => {
     return;
   }
 
-  const section = intersections[0].object.parent?.userData?.section;
+  const section = resolveSectionFromObject(intersections[0].object);
   if (section) {
     beginAutoPilot(section, true);
   }
@@ -2459,6 +2680,7 @@ function tick(now) {
 
   const delta = Math.min((now - lastTime) / 1000, 0.05);
   lastTime = now;
+  const frameBounds = getCanvasBounds();
 
   if (undockGraceTime > 0) {
     undockGraceTime = Math.max(0, undockGraceTime - delta);
@@ -2507,7 +2729,7 @@ function tick(now) {
 
   resolvePlanetCollisions();
 
-  updateDockCandidate();
+  updateDockCandidate(frameBounds, now);
   updateCamera();
 
   // Execute Cinematic Warp override over the standard updateCamera lerp
@@ -2533,8 +2755,8 @@ function tick(now) {
 
   updateSpaceDust();
   
-  if (now - lastScannerUpdateTime > scannerUpdateInterval) {
-    updateScanner();
+  if (now - lastScannerUpdateTime > currentScannerUpdateInterval) {
+    updateScanner(frameBounds);
     lastScannerUpdateTime = now;
   }
 
@@ -2590,8 +2812,8 @@ function tick(now) {
     }
   });
 
-  updateTrail();
-  syncHud(now);
+  updateTrail(now, delta);
+  syncHud(now, frameBounds);
   if (usePostProcessing) {
     composer.render();
   } else {
