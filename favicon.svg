@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#17304d" />
+      <stop offset="1" stop-color="#020913" />
+    </linearGradient>
+    <linearGradient id="planet" x1="18" y1="16" x2="46" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f0de98" />
+      <stop offset="1" stop-color="#b89548" />
+    </linearGradient>
+    <linearGradient id="ring" x1="10" y1="24" x2="54" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d8f6ff" stop-opacity=".82" />
+      <stop offset="1" stop-color="#8cb0cf" stop-opacity=".55" />
+    </linearGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="16" fill="url(#bg)" />
+
+  <circle cx="48" cy="15" r="1.8" fill="#f5fbff" />
+  <circle cx="16" cy="14" r="1.2" fill="#9ed6ff" />
+  <circle cx="21" cy="49" r="1.4" fill="#f5fbff" />
+
+  <ellipse cx="31.5" cy="35" rx="23" ry="7.8" fill="none" stroke="url(#ring)" stroke-width="3" transform="rotate(-13 31.5 35)" />
+  <circle cx="31.5" cy="33" r="14.5" fill="url(#planet)" />
+  <path d="M20 27.5c8.4-3.6 18.7-2.9 24 0" fill="none" stroke="#f7edba" stroke-opacity=".55" stroke-width="3" stroke-linecap="round" />
+  <path d="M19.5 34.5c7.8 2.5 17.1 2.5 24.5 0" fill="none" stroke="#b89655" stroke-opacity=".4" stroke-width="3" stroke-linecap="round" />
+
+  <path d="M18 21h8.5c6.5 0 10.5 3 10.5 8.1 0 4.8-3.8 7.8-10.1 7.8H24v8h-6zM24 31.8h2.9c2.8 0 4.2-1 4.2-2.8 0-1.9-1.4-2.9-4.3-2.9H24z" fill="#f5fbff" />
+</svg>
