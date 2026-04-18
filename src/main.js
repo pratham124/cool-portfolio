@@ -3170,6 +3170,7 @@ function updateRenderQuality(width, height) {
   currentScannerUpdateInterval = usePostProcessing ? desktopScannerUpdateInterval : reducedScannerUpdateInterval;
 
   if (usePostProcessing) {
+    composer.setPixelRatio(window.devicePixelRatio);
     composer.setSize(width, height);
   }
 }
