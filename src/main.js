@@ -8,24 +8,24 @@ import "./styles.css";
 const sections = [
   {
     id: "about",
-    title: "Sun",
+    title: "Earth",
     subtitle: "About Me",
     description:
       "I am a Software Engineering student at the University of Alberta (Expected Graduation 2027) with a proven track record of delivering high-impact solutions across multiple internships. My expertise spans full-stack development, performance optimization, and AI integration, with successful tenures at Ericsson, Pason Systems, and ANC. I specialize in building scalable applications that solve complex problems, from RAG chatbots to 5G network testing automation.",
-    funFact: "The Sun accounts for 99.86% of the mass in the entire solar system.",
-    color: "#ffb347",
-    position: new THREE.Vector3(0, 0, 0),
+    funFact: "Earth’s core is as hot as the surface of the sun, and it's the only planet in the solar system known to have active plate tectonics.",
+    color: "#6cb7ff",
+    position: new THREE.Vector3(-100, 5, -45),
     facts: [],
   },
   {
     id: "projects",
-    title: "Earth",
+    title: "Mars",
     subtitle: "Projects",
     description:
       "Some Stuff I've built.",
-    funFact: "Earth's rotation is gradually slowing down at a rate of 17 milliseconds per hundred years.",
-    color: "#6cb7ff",
-    position: new THREE.Vector3(-52, 2, -28),
+    funFact: "Sunsets on Mars are blue! Fine dust in its thin atmosphere scatters red light away, leaving a distinct blue glow around the setting sun.",
+    color: "#d96f43",
+    position: new THREE.Vector3(155, -4, -90),
     facts: [
       [
         "311 Forecasting System",
@@ -55,13 +55,13 @@ const sections = [
   },
   {
     id: "skills",
-    title: "Mars",
+    title: "Neptune",
     subtitle: "Skills",
     description:
-      "A battle-tested technical arsenal across full-stack engineering, cloud infrastructure, and AI integration. Specialized in transforming complex requirements into high-performance, scalable systems.",
-    funFact: "Mars is home to Olympus Mons, the tallest planetary mountain in the solar system, standing three times higher than Mount Everest.",
-    color: "#d96f43",
-    position: new THREE.Vector3(82, -2, -45),
+      "",
+    funFact: "It rains diamonds on Neptune! Extreme internal pressure likely squeezes carbon until it crystallizes into solid diamonds that sink toward the core.",
+    color: "#4f8cff",
+    position: new THREE.Vector3(-540, -12, 410),
     facts: [
       ["Languages", "Python, JavaScript, TypeScript, Java, C#, SQL, Bash, HTML, CSS"],
       ["Frameworks & Libraries", "React, Angular, Node, Spring Boot, .NET, Express, Django, FastAPI, LangChain, Redux, Cypress"],
@@ -75,9 +75,9 @@ const sections = [
     subtitle: "Experience",
     description:
       "Highlights from my internships.",
-    funFact: "Jupiter has the shortest day of any planet, rotating completely on its axis in less than 10 hours.",
+    funFact: "Jupiter’s Great Red Spot is a gargantuan storm that has raged for at least 350 years and is large enough to swallow Earth twice over.",
     color: "#d9b38c",
-    position: new THREE.Vector3(170, 1, 110),
+    position: new THREE.Vector3(315, 4, 210),
     facts: [
       ["Ericsson PLMS", "Incoming Full Stack Developer Intern", "Tech Stack: Java, Spring Boot, Angular, TypeScript, Kubernetes"],
       ["Ericsson OEM", "Web Developer Intern", "Shipped a LangChain RAG chatbot serving 4,000+ internal users and slashed React feature load times by 62%."],
@@ -92,9 +92,9 @@ const sections = [
     subtitle: "Contact",
     description:
       "Feel free to reach out if you'd like to chat about opportunities, experience, resume or anything else!",
-    funFact: "Saturn's beautiful rings are incredibly thin—spanning up to 282,000 kilometers across, but only about 10 meters thick.",
+    funFact: "Saturn is so light for its size that it would float in water—if you could find a bathtub large enough to hold it.",
     color: "#e6d28a",
-    position: new THREE.Vector3(-240, -5, 150),
+    position: new THREE.Vector3(460, -12, -300),
     facts: [
       ["Email", "pratham.sitoula03@gmail.com"],
     ],
@@ -107,7 +107,7 @@ const sections = [
 
 function createVoyagerModel(name) {
   const group = new THREE.Group();
-  
+
   const goldMaterial = new THREE.MeshStandardMaterial({ color: 0xc5a059, metalness: 0.9, roughness: 0.2, fog: false });
   const dishMaterial = new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.1, roughness: 0.8, side: THREE.DoubleSide, fog: false });
   const darkMaterial = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.5, roughness: 0.5, fog: false });
@@ -148,7 +148,7 @@ function createVoyagerModel(name) {
   group.add(sciBoom);
 
   group.scale.setScalar(1.1);
-  
+
   // Add a tiny light to the probe so it's visible in deep space
   const light = new THREE.PointLight(0xffffff, 2.5, 30);
   light.position.set(0, 0, 0);
@@ -159,11 +159,11 @@ function createVoyagerModel(name) {
 }
 
 function createAsteroidBelt() {
-  const count = 3500;
+  const count = 8000;
   const geom = new THREE.IcosahedronGeometry(1.0, 0); // Flat-shaded rocks
   const mat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.9, flatShading: true });
   const mesh = new THREE.InstancedMesh(geom, mat, count);
-  
+
   const matrix = new THREE.Matrix4();
   const position = new THREE.Vector3();
   const rotation = new THREE.Euler();
@@ -171,19 +171,19 @@ function createAsteroidBelt() {
 
   for (let i = 0; i < count; i++) {
     // Toroidal distribution
-    const radius = THREE.MathUtils.randFloat(115, 150);
+    const radius = THREE.MathUtils.randFloat(240, 310);
     const angle = Math.random() * Math.PI * 2;
-    const yShift = THREE.MathUtils.randFloatSpread(24);
-    
+    const yShift = THREE.MathUtils.randFloatSpread(18);
+
     position.set(Math.cos(angle) * radius, yShift, Math.sin(angle) * radius);
     rotation.set(Math.random(), Math.random(), Math.random());
-    const s = Math.random() * 0.8 + 0.2;
+    const s = Math.random() * 0.9 + 0.15;
     scale.set(s, s, s);
-    
+
     matrix.compose(position, new THREE.Quaternion().setFromEuler(rotation), scale);
     mesh.setMatrixAt(i, matrix);
   }
-  
+
   return mesh;
 }
 
@@ -195,15 +195,15 @@ const SoundEngine = {
   init() {
     if (this.ctx) return;
     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-    
+
     // Ambient Deep Space Hum
     this.hum = this.ctx.createOscillator();
     this.hum.type = 'sine';
     this.hum.frequency.setValueAtTime(45, this.ctx.currentTime);
-    
+
     this.gain = this.ctx.createGain();
     this.gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
-    
+
     this.hum.connect(this.gain);
     this.gain.connect(this.ctx.destination);
     this.hum.start();
@@ -224,8 +224,8 @@ const SoundEngine = {
   }
 };
 
-window.addEventListener('mousedown', () => SoundEngine.init(), { once: true });
-window.addEventListener('keydown', () => SoundEngine.init(), { once: true });
+window.addEventListener("pointerdown", () => SoundEngine.init(), { once: true });
+window.addEventListener("keydown", () => SoundEngine.init(), { once: true });
 
 /* --- Comet Easter Egg --- */
 function createComet() {
@@ -240,7 +240,7 @@ function createComet() {
   const positions = new Float32Array(particleCount * 3);
   const particleGeometry = new THREE.BufferGeometry();
   particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  
+
   const particleMaterial = new THREE.PointsMaterial({
     color: 0x88ccff,
     size: 0.15,
@@ -249,7 +249,7 @@ function createComet() {
     blending: THREE.AdditiveBlending,
     depthWrite: false
   });
-  
+
   const particles = new THREE.Points(particleGeometry, particleMaterial);
   group.add(particles);
 
@@ -259,8 +259,179 @@ function createComet() {
     velocity: new THREE.Vector3(),
     spawnTimer: 0
   };
-  
+
   return group;
+}
+
+/* --- Space Dust --- */
+function createSpaceDust() {
+  const count = 4000;
+  const geom = new THREE.BufferGeometry();
+  const positions = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    positions[i * 3] = THREE.MathUtils.randFloatSpread(400);
+    positions[i * 3 + 1] = THREE.MathUtils.randFloatSpread(400);
+    positions[i * 3 + 2] = THREE.MathUtils.randFloatSpread(400);
+  }
+  geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const mat = new THREE.PointsMaterial({
+    color: 0x88ccff,
+    size: 0.25,
+    transparent: true,
+    opacity: 0.35,
+    sizeAttenuation: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  return new THREE.Points(geom, mat);
+}
+
+function updateSpaceDust() {
+  if (!spaceDust || !rocket) return;
+  const size = 400;
+  spaceDust.position.x = Math.round(rocket.position.x / size) * size;
+  spaceDust.position.y = Math.round(rocket.position.y / size) * size;
+  spaceDust.position.z = Math.round(rocket.position.z / size) * size;
+}
+
+/* --- Deep Space Nebulas --- */
+function createNebulaField() {
+  const group = new THREE.Group();
+  const textures = [
+    textureLoader.load("/root/.gemini/antigravity/brain/f32fe163-0db4-4ab3-acba-99d76f7d8053/nebula_texture_1_1776503578944.png"),
+    textureLoader.load("/root/.gemini/antigravity/brain/f32fe163-0db4-4ab3-acba-99d76f7d8053/nebula_texture_2_1776503596828.png")
+  ];
+
+  for (let i = 0; i < 8; i++) {
+    const tex = textures[i % textures.length];
+    const mat = new THREE.MeshBasicMaterial({
+      map: tex,
+      transparent: true,
+      opacity: 0.08,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+
+    const size = THREE.MathUtils.randFloat(800, 1400);
+    const geom = new THREE.PlaneGeometry(size, size);
+    const mesh = new THREE.Mesh(geom, mat);
+
+    const radius = THREE.MathUtils.randFloat(1600, 1900);
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.random() * Math.PI;
+
+    mesh.position.setFromSphericalCoords(radius, phi, theta);
+    mesh.lookAt(0, 0, 0);
+    mesh.rotation.z = Math.random() * Math.PI * 2;
+    
+    group.add(mesh);
+  }
+
+  return group;
+}
+
+/* --- Navigation Scanner --- */
+function createScannerIcons() {
+  const scannerContainer = document.getElementById("nav-scanner");
+  if (!scannerContainer) return null;
+  
+  const bodies = [
+    { name: "Sun", color: "#ffb347", type: 'sun' },
+    { name: "Earth", color: "#6cb7ff", id: "about" },
+    { name: "Mars", color: "#d96f43", id: "projects" },
+    { name: "Jupiter", color: "#d9b38c", id: "experience" },
+    { name: "Saturn", color: "#e6d28a", id: "contact" },
+    { name: "Neptune", color: "#4f8cff", id: "skills" }
+  ];
+
+  return bodies.map(body => {
+    const el = document.createElement("div");
+    el.className = "scanner-icon";
+    el.innerText = body.name[0];
+    el.style.borderColor = body.color;
+    el.title = body.name;
+    scannerContainer.appendChild(el);
+
+    const arrow = document.createElement("div");
+    arrow.className = "scanner-arrow";
+    arrow.innerText = "▲";
+    scannerContainer.appendChild(arrow);
+    
+    el.onclick = () => {
+        if (body.type === 'sun') {
+            beginAutoPilot({ title: "Sun", position: new THREE.Vector3(0,0,0), id: 'sun' }, true);
+        } else {
+            const targetSection = sections.find(s => s.id === body.id);
+            if (targetSection) beginAutoPilot(targetSection, true);
+        }
+    };
+
+    return { name: body.name, el, arrow, id: body.id, color: body.color, type: body.type };
+  });
+}
+
+const scannerBodyPos = new THREE.Vector3();
+function updateScanner() {
+  if (!scannerIcons || !camera) return;
+
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const margin = 45;
+
+  scannerIcons.forEach(icon => {
+    let targetObj;
+    if (icon.type === "sun") {
+        targetObj = sunGroup;
+    } else {
+        targetObj = getPlanetGroup(sections.find(s => s.id === icon.id));
+    }
+
+    if (!targetObj) return;
+
+    targetObj.getWorldPosition(scannerBodyPos);
+    const pos = scannerBodyPos.clone().project(camera);
+    
+    const x = (pos.x * 0.5 + 0.5) * width;
+    const y = -(pos.y * 0.5 - 0.5) * height;
+    
+    const isBehind = pos.z > 1;
+    const isOffscreen = isBehind || x < margin || x > width - margin || y < margin || y > height - margin;
+
+    if (isOffscreen) {
+      let edgeX = x;
+      let edgeY = y;
+      
+      if (isBehind) {
+          edgeX = width - x;
+          edgeY = height - y;
+      }
+
+      const dx = edgeX - centerX;
+      const dy = edgeY - centerY;
+      const angle = Math.atan2(dy, dx);
+      
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      
+      const boxWidth = width - margin * 2;
+      const boxHeight = height - margin * 2;
+      const scale = Math.min(boxWidth/2 / Math.abs(cos), boxHeight/2 / Math.abs(sin));
+      
+      icon.el.style.transform = `translate(${centerX + cos * scale - 22}px, ${centerY + sin * scale - 22}px)`;
+      icon.el.style.opacity = "0.6";
+      
+      icon.arrow.style.display = "block";
+      icon.arrow.style.transform = `translate(${centerX + cos * (scale - 32)}px, ${centerY + sin * (scale - 32)}px) rotate(${angle + Math.PI/2}rad)`;
+      icon.arrow.style.color = icon.color;
+    } else {
+      icon.el.style.transform = `translate(${x - 22}px, ${y - 22}px)`;
+      icon.el.style.opacity = "1";
+      icon.arrow.style.display = "none";
+    }
+  });
 }
 
 const LAYOUT_PRESETS = {
@@ -270,11 +441,11 @@ const LAYOUT_PRESETS = {
     chaseDistance: 25.0,
     chaseHeight: 8.0,
     positions: {
-      about: new THREE.Vector3(0, 0, 0),
-      projects: new THREE.Vector3(-52, 2, -28),
-      skills: new THREE.Vector3(82, -2, -45),
-      experience: new THREE.Vector3(170, 1, 110),
-      contact: new THREE.Vector3(-240, -5, 150),
+      about: new THREE.Vector3(-100, 5, -45),
+      projects: new THREE.Vector3(155, -4, -90),
+      skills: new THREE.Vector3(-540, -12, 410),
+      experience: new THREE.Vector3(315, 4, 210),
+      contact: new THREE.Vector3(460, -12, -300),
     },
   },
   tablet: {
@@ -283,11 +454,11 @@ const LAYOUT_PRESETS = {
     chaseDistance: 28.0,
     chaseHeight: 9.5,
     positions: {
-      about: new THREE.Vector3(0, 0, 0),
-      projects: new THREE.Vector3(-52, 2, -28),
-      skills: new THREE.Vector3(82, -2, -45),
-      experience: new THREE.Vector3(170, 1, 110),
-      contact: new THREE.Vector3(-240, -5, 150),
+      about: new THREE.Vector3(-100, 5, -45),
+      projects: new THREE.Vector3(155, -4, -90),
+      skills: new THREE.Vector3(-540, -12, 410),
+      experience: new THREE.Vector3(315, 4, 210),
+      contact: new THREE.Vector3(460, -12, -300),
     },
   },
   mobile: {
@@ -296,11 +467,11 @@ const LAYOUT_PRESETS = {
     chaseDistance: 32.0,
     chaseHeight: 12.0,
     positions: {
-      about: new THREE.Vector3(0, 0, 0),
-      projects: new THREE.Vector3(-52, 2, -28),
-      skills: new THREE.Vector3(82, -2, -45),
-      experience: new THREE.Vector3(170, 1, 110),
-      contact: new THREE.Vector3(-240, -5, 150),
+      about: new THREE.Vector3(-100, 5, -45),
+      projects: new THREE.Vector3(155, -4, -90),
+      skills: new THREE.Vector3(-540, -12, 410),
+      experience: new THREE.Vector3(315, 4, 210),
+      contact: new THREE.Vector3(460, -12, -300),
     },
   },
 };
@@ -311,6 +482,7 @@ const titleEl = document.getElementById("section-title");
 const descriptionEl = document.getElementById("section-description");
 const pointsEl = document.getElementById("section-points");
 const infoCardEl = document.querySelector(".info-card");
+const sunBurnOverlay = document.getElementById("sun-burn-overlay");
 const zoomInButton = document.getElementById("zoom-in");
 const zoomOutButton = document.getElementById("zoom-out");
 
@@ -321,8 +493,8 @@ const pointer = new THREE.Vector2();
 const yAxis = new THREE.Vector3(0, 1, 0);
 const boosterFlames = [];
 const cameraLookOffset = new THREE.Vector3(0, 1.15, 0);
-const movementBoundsMin = new THREE.Vector3(-450, -150, -450);
-const movementBoundsMax = new THREE.Vector3(450, 150, 450);
+const movementBoundsMin = new THREE.Vector3(-1200, -250, -1200);
+const movementBoundsMax = new THREE.Vector3(1200, 250, 1200);
 const asteroidLabelWorldPosition = new THREE.Vector3();
 const trailCamUp = new THREE.Vector3(0, 1, 0);
 const trailSegmentDirection = new THREE.Vector3();
@@ -335,6 +507,17 @@ const voyagerWorldPosition = new THREE.Vector3();
 const voyagerProjectedPosition = new THREE.Vector3();
 const voyagerFrustum = new THREE.Frustum();
 const voyagerFrustumMatrix = new THREE.Matrix4();
+const collisionOffset = new THREE.Vector3();
+const collisionNormal = new THREE.Vector3();
+
+// --- New Polish Systems ---
+let spaceDust = null;
+let scannerIcons = null;
+let nebulaField = null;
+let planetIconsCreated = false;
+
+const scannerUpdateInterval = 16; 
+let lastScannerUpdateTime = 0;
 
 const renderer = new THREE.WebGLRenderer({
   canvas,
@@ -399,27 +582,27 @@ function createDeepSpaceLabel(name, fact) {
   container.style.transition = 'opacity 0.4s ease';
   container.style.boxShadow = '0 0 20px rgba(130, 180, 255, 0.2)';
   container.style.zIndex = '5';
-  
+
   container.innerHTML = `
     <div class="hud-tether" style="position: absolute; top: 50%; right: 100%; height: 2px; width: 40px; background: linear-gradient(to right, transparent, rgba(130, 180, 255, 0.6)); transform-origin: right center;"></div>
     <div class="offscreen-arrow" style="position: absolute; top: 50%; left: -30px; transform: translateY(-50%) rotate(0deg); color: #6cb7ff; font-size: 1.2rem; display: none;">▶</div>
     <em style="display: block; margin-bottom: 6px; color: #a3c2ff; font-size: 0.7rem; font-style: normal; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700;">📡 Transmission: ${name}</em>
     <span style="font-family: 'Courier New', monospace; font-size: 0.85rem; color: #6cb7ff;">Distance: ${fact}</span>
   `;
-  
+
   document.getElementById('asteroid-labels-container').appendChild(container);
   return container;
 }
 
 const voyager1 = createVoyagerModel("Voyager 1");
-voyager1.position.set(240, 80, -280);
+voyager1.position.set(600, 200, -700);
 voyager1.rotation.set(0.5, 0.2, 0.1);
 const voyager1Label = createDeepSpaceLabel("Voyager 1", "24.4 Billion km");
 voyager1.userData.label = voyager1Label;
 scene.add(voyager1);
 
 const voyager2 = createVoyagerModel("Voyager 2");
-voyager2.position.set(-320, -60, 280);
+voyager2.position.set(-800, -150, 700);
 voyager2.rotation.set(-0.3, 0.5, -0.4);
 const voyager2Label = createDeepSpaceLabel("Voyager 2", "20.3 Billion km");
 voyager2.userData.label = voyager2Label;
@@ -461,13 +644,22 @@ const starCount = 3000;
 const starPositions = new Float32Array(starCount * 3);
 const starColors = new Float32Array(starCount * 3);
 const c = new THREE.Color();
+const starDirection = new THREE.Vector3();
 
 for (let i = 0; i < starCount; i++) {
   const o = i * 3;
-  // Increase distribution radius heavily to emphasize deep parallax
-  starPositions[o] = THREE.MathUtils.randFloatSpread(400);
-  starPositions[o + 1] = THREE.MathUtils.randFloatSpread(200);
-  starPositions[o + 2] = THREE.MathUtils.randFloatSpread(400);
+  // Distribute stars across a large shell so the full sky stays populated.
+  starDirection
+    .set(
+      THREE.MathUtils.randFloatSpread(2),
+      THREE.MathUtils.randFloatSpread(2),
+      THREE.MathUtils.randFloatSpread(2),
+    )
+    .normalize()
+    .multiplyScalar(THREE.MathUtils.randFloat(1400, 1800));
+  starPositions[o] = starDirection.x;
+  starPositions[o + 1] = starDirection.y;
+  starPositions[o + 2] = starDirection.z;
 
   // Blend temperatures: mostly cool blues and stark white, with rare hot oranges
   const hue = Math.random() > 0.8 ? THREE.MathUtils.randFloat(0.05, 0.1) : THREE.MathUtils.randFloat(0.55, 0.65);
@@ -494,13 +686,13 @@ scene.add(stars);
 
 // Deep space dynamic backdrop map
 const galaxyMesh = new THREE.Mesh(
-  new THREE.SphereGeometry(350, 64, 64),
+  new THREE.SphereGeometry(1300, 64, 64),
   new THREE.MeshBasicMaterial({
     map: textureLoader.load("/textures/galaxy_starfield.png"),
     side: THREE.BackSide,
     transparent: true,
-    opacity: 0.35, 
-    depthWrite: false, 
+    opacity: 0.35,
+    depthWrite: false,
     fog: false,
   })
 );
@@ -781,10 +973,15 @@ let sceneScaleFactor = 1;
 let currentLayout = LAYOUT_PRESETS.desktop;
 let activeSection = null;
 let dockCandidate = null;
+let autoPilotSection = null;
+let undockGraceSection = null;
+let undockGraceTime = 0;
 let isAutoPiloting = false;
 let usePostProcessing = true;
 let lastStatusText = "";
 let lastHudSyncTime = -Infinity;
+let sunBurnTime = 0;
+let sunRespawnTimer = 0;
 
 const HUD_SYNC_INTERVAL_MS = 125;
 
@@ -947,6 +1144,7 @@ const planetTextures = {
   Mars: textureLoader.load("/textures/marsmap1k.jpg"),
   Jupiter: textureLoader.load("/textures/jupitermap.jpg"),
   Saturn: textureLoader.load("/textures/saturnmap.jpg"),
+  Neptune: null,
   Moon: textureLoader.load("/textures/moonmap1k.jpg"),
 };
 
@@ -1058,6 +1256,24 @@ function createPlanetTexture(name, baseColor) {
     makeNoiseLayer(ctx, size, "#e2ac84", 130, 10, 30, 0.18);
   }
 
+  if (name === "Neptune") {
+    for (let index = 0; index < 16; index += 1) {
+      const y = (index / 16) * size;
+      const bandHeight = size / 16 + THREE.MathUtils.randFloat(-8, 10);
+      const stripe = base
+        .clone()
+        .offsetHSL(
+          THREE.MathUtils.randFloat(-0.01, 0.01),
+          THREE.MathUtils.randFloat(-0.04, 0.04),
+          THREE.MathUtils.randFloat(-0.14, 0.12),
+        );
+      ctx.fillStyle = `#${stripe.getHexString()}`;
+      ctx.fillRect(0, y, size, bandHeight);
+    }
+    makeNoiseLayer(ctx, size, "#86b9ff", 120, 10, 28, 0.18);
+    makeNoiseLayer(ctx, size, "#d8ecff", 60, 18, 40, 0.08);
+  }
+
   if (name === "Jupiter" || name === "Saturn") {
     const bands = name === "Jupiter" ? 14 : 18;
     for (let index = 0; index < bands; index += 1) {
@@ -1092,15 +1308,16 @@ function createPlanetTexture(name, baseColor) {
   return texture;
 }
 
-function createPlanet(section) {
+function createPlanet(section, isInteractive = true) {
   const group = new THREE.Group();
   const baseColor = new THREE.Color(section.color);
   const planetConfig = {
-    Sun: { radius: 6.6, glowRadius: 8.7, ringRadius: null, emissive: "#ff9d36", emissiveIntensity: 2.8 },
+    Sun: { radius: 22.0, glowRadius: 26.0, ringRadius: null, emissive: "#ff9d36", emissiveIntensity: 2.8 },
     Earth: { radius: 4.5, glowRadius: 5.3, ringRadius: null },
-    Mars: { radius: 4, glowRadius: 4.8, ringRadius: null },
-    Jupiter: { radius: 5.6, glowRadius: 6.6, ring: null },
-    Saturn: { radius: 5.1, glowRadius: 6, ring: { inner: 6.2, outer: 12.0 } },
+    Mars: { radius: 3.5, glowRadius: 4.2, ringRadius: null },
+    Neptune: { radius: 6.5, glowRadius: 7.6, ring: null },
+    Jupiter: { radius: 10.0, glowRadius: 11.5, ring: null },
+    Saturn: { radius: 9.0, glowRadius: 10.5, ring: { inner: 11.0, outer: 22.0 } },
   }[section.title] || { radius: 4.5, glowRadius: 5.3, ring: null };
 
   const isSun = section.title === "Sun";
@@ -1180,7 +1397,7 @@ function createPlanet(section) {
     moon.position.set(8.5, 0, 0);
     moonGroup.rotation.x = 0.15;
     moonGroup.rotation.z = 0.1;
-    
+
     moonGroup.add(moon);
     group.add(moonGroup);
   }
@@ -1191,67 +1408,67 @@ function createPlanet(section) {
     let anchorMesh;
     if (section.title === "Earth") {
       anchorMesh = new THREE.Group();
-      
+
       const moduleMaterial = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.3, roughness: 0.7 });
       const trussMaterial = new THREE.MeshStandardMaterial({ color: 0xcdcdcd, metalness: 0.9, roughness: 0.2 });
       const panelMaterial = new THREE.MeshStandardMaterial({ color: 0x1e3f66, metalness: 0.5, roughness: 0.4 });
-      
+
       // Main pressurized modules (Central spine)
       const coreModule = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 2.0, 16), moduleMaterial);
       coreModule.rotation.z = Math.PI / 2;
-      
+
       // Transverse truss (Long backbone holding panels)
       const mainTruss = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 4.0, 8), trussMaterial);
-      
+
       // Cross habitation module
       const habModule = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 1.2, 16), moduleMaterial);
       habModule.position.set(0.4, 0, 0);
 
       // Distinctive 4-wing Solar Array system
       const panelGeom = new THREE.BoxGeometry(0.6, 0.04, 1.5);
-      
+
       const p1 = new THREE.Mesh(panelGeom, panelMaterial);
       p1.position.set(0, 1.5, -0.9);
-      
+
       const p2 = new THREE.Mesh(panelGeom, panelMaterial);
       p2.position.set(0, 1.5, 0.9);
-      
+
       const p3 = new THREE.Mesh(panelGeom, panelMaterial);
       p3.position.set(0, -1.5, -0.9);
-      
+
       const p4 = new THREE.Mesh(panelGeom, panelMaterial);
       p4.position.set(0, -1.5, 0.9);
-      
+
       anchorMesh.add(coreModule, mainTruss, habModule, p1, p2, p3, p4);
       anchorMesh.scale.setScalar(0.4);
     } else if (section.title === "Sun") {
       anchorMesh = new THREE.Group();
-      
+
       const shieldMaterial = new THREE.MeshStandardMaterial({ color: 0xeaeaea, metalness: 0.1, roughness: 0.9, flatShading: true });
       const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.4 });
       const panelMaterial = new THREE.MeshStandardMaterial({ color: 0x112244, metalness: 0.5, roughness: 0.5 });
-      
+
       const shield = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.1, 16), shieldMaterial);
       shield.rotation.x = Math.PI / 2;
       shield.position.set(0, 0, 0.6);
-      
+
       const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.8, 6), bodyMaterial);
       body.rotation.x = Math.PI / 2;
       body.position.set(0, 0, 0);
-      
+
       const panelGeom = new THREE.BoxGeometry(1.6, 0.05, 0.5);
       const pL = new THREE.Mesh(panelGeom, panelMaterial);
       pL.position.set(-1.0, 0, -0.2);
       pL.rotation.y = 0.35;
-      
+
       const pR = new THREE.Mesh(panelGeom, panelMaterial);
       pR.position.set(1.0, 0, -0.2);
       pR.rotation.y = -0.35;
-      
+
       const boom = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2), shieldMaterial);
       boom.rotation.x = Math.PI / 2;
       boom.position.set(0, 0, -0.8);
-      
+
       anchorMesh.add(shield, body, pL, pR, boom);
       anchorMesh.scale.setScalar(0.6);
     } else {
@@ -1265,11 +1482,12 @@ function createPlanet(section) {
         })
       );
     }
-    
-    anchorMesh.position.set(planetConfig.radius + 6.5, 3.5, 0);
+
+      const probeAltitude = section.title === "Sun" ? planetConfig.radius + 12.5 : planetConfig.radius + 6.5;
+      anchorMesh.position.set(probeAltitude, 3.5, 0);
     asteroidGroup.rotation.x = Math.random() * Math.PI;
     asteroidGroup.rotation.z = Math.random() * Math.PI;
-    
+
     asteroidGroup.add(anchorMesh);
     group.add(asteroidGroup);
 
@@ -1289,8 +1507,9 @@ function createPlanet(section) {
     labelDiv.style.pointerEvents = 'none';
     labelDiv.style.transition = 'opacity 0.4s ease'; // Fades smoothly on approach
     labelDiv.style.transform = 'translate(15px, -50%)'; // Offset from asteroid center
-    labelDiv.innerHTML = `<em style="display: block; margin-bottom: 6px; color: #a3c2ff; font-size: 0.7rem; font-style: normal; letter-spacing: 0.05em; text-transform: uppercase;">Astronomy Fact</em>${section.funFact}`;
-    
+    const labelTitle = section.title === "Sun" ? "Solar Probe" : "Astronomy Fact";
+    labelDiv.innerHTML = `<em style="display: block; margin-bottom: 6px; color: #a3c2ff; font-size: 0.7rem; font-style: normal; letter-spacing: 0.05em; text-transform: uppercase;">${labelTitle}</em>${section.funFact}`;
+
     document.getElementById('asteroid-labels-container').appendChild(labelDiv);
 
     asteroidData = {
@@ -1311,18 +1530,63 @@ function createPlanet(section) {
     radius: planetConfig.radius,
   };
   scene.add(group);
-  planets.push(group);
-  clickablePlanets.push(planet);
+  if (isInteractive) {
+    planets.push(group);
+    clickablePlanets.push(planet);
+  }
+
+  return group;
 }
 
-sections.forEach(createPlanet);
+sections.forEach((section) => createPlanet(section));
+const sunGroup = createPlanet(
+  {
+    id: "sun",
+    title: "Sun",
+    subtitle: "Sun",
+    description: "",
+    color: "#ffb347",
+    position: new THREE.Vector3(0, 0, 0),
+    facts: [],
+    funFact: "Parker Solar Probe: The fastest human-made object ever, reaching over 600,000 km/h as it 'touches' the Sun's atmosphere to study the corona.",
+  },
+  false,
+);
+
+const aboutSection = sections.find((section) => section.id === "about");
+
+// --- Initialize Polish Systems ---
+spaceDust = createSpaceDust();
+scene.add(spaceDust);
+
+scannerIcons = createScannerIcons();
+
+nebulaField = createNebulaField();
+scene.add(nebulaField);
 
 function getPlanetGroup(section) {
+  if (section?.id === 'sun') return sunGroup;
   return planets.find((planetGroup) => planetGroup.userData.section.id === section.id) || null;
 }
 
 function getSectionPosition(section) {
   return getPlanetGroup(section)?.position || section.position;
+}
+
+function getPlanetDockMetrics(section) {
+  const planetGroup = getPlanetGroup(section);
+  if (!planetGroup) {
+    return {
+      dockRadius: dockRadius * sceneScaleFactor,
+      undockRadius: undockRadius * sceneScaleFactor,
+    };
+  }
+
+  const collisionRadius = planetGroup.userData.radius * sceneScaleFactor + 1.6;
+  return {
+    dockRadius: Math.max(dockRadius * sceneScaleFactor, collisionRadius + 0.9),
+    undockRadius: Math.max(undockRadius * sceneScaleFactor, collisionRadius + 3.2),
+  };
 }
 
 function getResponsiveLayout() {
@@ -1346,15 +1610,17 @@ function applyResponsiveSceneLayout() {
     planetGroup.scale.setScalar(sceneScaleFactor);
     planetGroup.position.copy(currentLayout.positions[planetGroup.userData.section.id]);
   });
+  sunGroup.scale.setScalar(sceneScaleFactor);
 
   if (activeSection && !isAutoPiloting) {
-    rocket.position.copy(getSectionPosition(activeSection)).add(new THREE.Vector3(-6.8 * sceneScaleFactor, 0, 0));
+    const { dockRadius: activeDockRadius } = getPlanetDockMetrics(activeSection);
+    rocket.position.copy(getSectionPosition(activeSection)).add(new THREE.Vector3(-activeDockRadius, 0, 0));
   } else if (!activeSection && !isAutoPiloting && previousScale !== 0) {
     rocket.position.multiplyScalar(sceneScaleFactor / previousScale);
   }
 
-  if (dockCandidate) {
-    autopilotTarget.copy(getSectionPosition(dockCandidate)).add(new THREE.Vector3(-7.2 * sceneScaleFactor, 0.2, 0));
+  if (isAutoPiloting && autoPilotSection) {
+    autopilotTarget.copy(getSectionPosition(autoPilotSection));
   }
 }
 
@@ -1373,15 +1639,15 @@ function setContent(section, customText) {
     customText ||
     (section
       ? section.description
-      : "Click a planet or the Sun to jump to a section and fly around with the arrow keys.");
+      : "Click a planet to jump to a section, or fly around manually with the arrow keys.");
 
   pointsEl.innerHTML = "";
 
   const items = section
-    ? section.facts
+    ? (Array.isArray(section.facts) ? section.facts : [])
     : [
-      ["Desktop", "Use the keypad or keyboard to steer the rocket and change its viewing angle while flying."],
-      ["Mobile", "Tap a planet or the Sun to engage autopilot, then use the zoom buttons to adjust your distance."],
+      ["Desktop", "Use the keypad or keyboard to steer manually, or click a planet to travel there."],
+      ["Mobile", "Tap a planet to travel there, then use the zoom buttons to adjust your distance."],
       ["Scene", "A 3D universe with textured solar-system bodies and a chase camera behind the rocket."],
       ["Portfolio", "Swap placeholder copy with your real story, experience, and contact links."],
     ];
@@ -1434,10 +1700,12 @@ function setContent(section, customText) {
       innerHTML += `<em>${title}</em>`;
     }
 
-    if (value.includes('@')) {
-      innerHTML += `<span><a href="mailto:${value}" style="color: inherit; text-decoration: none;">${value}</a></span>`;
+    const renderedValue = typeof value === "string" ? value : String(value ?? "");
+
+    if (renderedValue.includes("@")) {
+      innerHTML += `<span><a href="mailto:${renderedValue}" style="color: inherit; text-decoration: none;">${renderedValue}</a></span>`;
     } else {
-      innerHTML += `<span>${value}</span>`;
+      innerHTML += `<span>${renderedValue}</span>`;
     }
 
     pill.innerHTML = innerHTML;
@@ -1474,6 +1742,24 @@ function updateStatus(text) {
 
 function beginAutoPilot(section, isManualTrigger = false) {
   if (!section) return;
+
+  if (activeSection && activeSection.id !== section.id) {
+    undockGraceSection = activeSection;
+    undockGraceTime = 0.9;
+    const currentSectionPosition = getSectionPosition(activeSection);
+    const { undockRadius: currentUndockRadius } = getPlanetDockMetrics(activeSection);
+    collisionOffset.copy(rocket.position).sub(currentSectionPosition);
+
+    if (collisionOffset.lengthSq() < 0.001) {
+      collisionOffset.set(-1, 0, 0);
+    }
+
+    collisionOffset.normalize();
+    rocket.position.copy(currentSectionPosition).addScaledVector(collisionOffset, currentUndockRadius + 0.25);
+  }
+
+  dockCandidate = section;
+  autoPilotSection = section;
   autopilotTarget.copy(getSectionPosition(section));
   isAutoPiloting = true;
   activeSection = null;
@@ -1482,10 +1768,15 @@ function beginAutoPilot(section, isManualTrigger = false) {
 }
 
 function dockWith(section) {
+  const { dockRadius: targetDockRadius } = getPlanetDockMetrics(section);
   activeSection = section;
+  autoPilotSection = null;
+  undockGraceSection = null;
+  undockGraceTime = 0;
+  dockCandidate = section;
   isAutoPiloting = false;
   rocketVelocity.multiplyScalar(0);
-  rocket.position.copy(getSectionPosition(section)).add(new THREE.Vector3(-6.8 * sceneScaleFactor, 0, 0));
+  rocket.position.copy(getSectionPosition(section)).add(new THREE.Vector3(-targetDockRadius, 0, 0));
   updateStatus(`Docked at ${section.title}`);
   setContent(section, section.description);
 }
@@ -1496,8 +1787,51 @@ function undockFrom(section) {
   }
 
   activeSection = null;
+  autoPilotSection = null;
+  undockGraceSection = null;
+  undockGraceTime = 0;
   updateStatus(`Departed ${section.title}`);
   setContent(null);
+}
+
+function respawnAtEarth(isIncinerated = false) {
+  if (!aboutSection) {
+    return;
+  }
+
+  keyboard.clear();
+  rocketVelocity.set(0, 0, 0);
+  zoomScale = minZoomScale;
+  dockWith(aboutSection);
+  rocket.rotation.set(0, 0, 0);
+  cameraPitch = 0.08;
+  sunBurnTime = 0;
+  sunRespawnTimer = 0;
+  if (sunBurnOverlay) {
+    sunBurnOverlay.style.opacity = "0";
+  }
+  if (isIncinerated) {
+    updateStatus("Incinerated by the Sun. Respawned at Earth.");
+  }
+}
+
+function triggerSunBurn() {
+  if (sunRespawnTimer > 0) {
+    return;
+  }
+
+  isAutoPiloting = false;
+  autoPilotSection = null;
+  activeSection = null;
+  dockCandidate = null;
+  undockGraceSection = null;
+  undockGraceTime = 0;
+  keyboard.clear();
+  rocketVelocity.set(0, 0, 0);
+  setContent(null);
+  updateStatus("Solar incineration imminent");
+  sunBurnTime = 0.75;
+  sunRespawnTimer = 0.75;
 }
 
 function isMobileMode() {
@@ -1508,19 +1842,23 @@ function updateDockCandidate() {
   let nearest = null;
   let nearestDistance = Number.POSITIVE_INFINITY;
 
-  planets.forEach((planetGroup, index) => {
-    const section = sections[index];
+  [...planets, sunGroup].forEach((planetGroup, index) => {
+    const section = planetGroup.userData.section;
     const distance = rocket.position.distanceTo(planetGroup.position);
     const pulse = 0.5 + Math.sin(performance.now() * 0.0012 + index) * 0.12;
+    const { undockRadius: effectiveUndockRadius } = getPlanetDockMetrics(section);
+    const revealRange = planetGroup.userData.section.id === "sun" ? 45 : 18;
+    const factRevealRadius = effectiveUndockRadius + revealRange * sceneScaleFactor;
+    const factFullOpacityRadius = effectiveUndockRadius + (planetGroup.userData.section.id === "sun" ? 15 : 5) * sceneScaleFactor;
 
     planetGroup.rotation.y += 0.0015 + index * 0.00025;
-    planetGroup.userData.glow.material.opacity = distance < undockRadius ? 0.22 + pulse : 0.1 + pulse * 0.35;
+    planetGroup.userData.glow.material.opacity = distance < effectiveUndockRadius ? 0.22 + pulse : 0.1 + pulse * 0.35;
     if (planetGroup.userData.corona) {
-      planetGroup.userData.corona.material.opacity = distance < undockRadius ? 0.18 + pulse * 0.2 : 0.1 + pulse * 0.14;
+      planetGroup.userData.corona.material.opacity = distance < effectiveUndockRadius ? 0.18 + pulse * 0.2 : 0.1 + pulse * 0.14;
       planetGroup.userData.corona.scale.setScalar(1 + pulse * 0.08);
     }
     if (planetGroup.userData.ring) {
-      planetGroup.userData.ring.material.opacity = distance < undockRadius ? 1.0 : 0.85;
+      planetGroup.userData.ring.material.opacity = distance < effectiveUndockRadius ? 1.0 : 0.85;
     }
     if (planetGroup.userData.moonGroup) {
       planetGroup.userData.moonGroup.rotation.y -= 0.003;
@@ -1529,12 +1867,13 @@ function updateDockCandidate() {
 
     if (planetGroup.userData.asteroidData) {
       const ast = planetGroup.userData.asteroidData;
-      
-      ast.group.rotation.y -= 0.002;
+
+      const orbitSpeed = planetGroup.userData.section.id === "sun" ? 0.012 : 0.002;
+      ast.group.rotation.y -= orbitSpeed;
       ast.mesh.rotation.x += 0.004;
       ast.mesh.rotation.y += 0.005;
 
-      if (distance < undockRadius + 18) {
+      if (distance < factRevealRadius) {
         ast.mesh.getWorldPosition(asteroidLabelWorldPosition);
         asteroidLabelWorldPosition.project(camera);
 
@@ -1543,9 +1882,9 @@ function updateDockCandidate() {
 
         ast.label.style.left = `${x}px`;
         ast.label.style.top = `${y}px`;
-        ast.label.style.opacity = distance < undockRadius + 5 ? '1' : '0';
+        ast.label.style.opacity = distance < factFullOpacityRadius ? "1" : "0";
       } else {
-        ast.label.style.opacity = '0';
+        ast.label.style.opacity = "0";
       }
     }
 
@@ -1555,13 +1894,31 @@ function updateDockCandidate() {
     }
   });
 
-  dockCandidate = nearestDistance < undockRadius * sceneScaleFactor ? nearest : null;
+  const nearestMetrics = nearest
+    ? getPlanetDockMetrics(nearest)
+    : {
+      dockRadius: dockRadius * sceneScaleFactor,
+      undockRadius: undockRadius * sceneScaleFactor,
+    };
+  const effectiveDockRadius = nearestMetrics.dockRadius;
+  const effectiveUndockRadius = nearestMetrics.undockRadius;
 
-  if (activeSection && activeSection.id === nearest?.id && nearestDistance > undockRadius * sceneScaleFactor) {
+  dockCandidate = nearestDistance < effectiveUndockRadius ? nearest : null;
+
+  const isActiveAutoPilotArrival = isAutoPiloting && autoPilotSection?.id === nearest?.id;
+  const shouldSuppressImmediateRedock =
+    isAutoPiloting && autoPilotSection && autoPilotSection.id !== nearest?.id;
+
+  if (activeSection && activeSection.id === nearest?.id && nearestDistance > effectiveUndockRadius) {
     undockFrom(activeSection);
-  } else if (!activeSection && !isAutoPiloting && nearest && nearestDistance < dockRadius * sceneScaleFactor) {
+  } else if (
+    !activeSection &&
+    nearest &&
+    !shouldSuppressImmediateRedock &&
+    (nearestDistance < effectiveDockRadius || (isActiveAutoPilotArrival && nearestDistance < effectiveUndockRadius))
+  ) {
     dockWith(nearest);
-  } else if (activeSection && dockCandidate?.id === activeSection.id && nearestDistance < dockRadius * sceneScaleFactor) {
+  } else if (activeSection && dockCandidate?.id === activeSection.id && nearestDistance < effectiveDockRadius) {
     updateStatus(`Docked at ${activeSection.title}`);
   } else if (dockCandidate && !isMobileMode() && !activeSection && !isAutoPiloting) {
     updateStatus(`Approaching ${dockCandidate.title}. Auto-docking when close enough.`);
@@ -1632,8 +1989,18 @@ function handleAutoPilot(delta) {
   tempDirection.copy(autopilotTarget).sub(rocket.position);
   const distance = tempDirection.length();
 
+  if (autoPilotSection) {
+    const { dockRadius: targetDockRadius } = getPlanetDockMetrics(autoPilotSection);
+    const distanceToPlanet = rocket.position.distanceTo(getSectionPosition(autoPilotSection));
+    if (distanceToPlanet < targetDockRadius) {
+      dockWith(autoPilotSection);
+      return;
+    }
+  }
+
   if (distance < 0.15) {
     isAutoPiloting = false;
+    autoPilotSection = null;
     return;
   }
 
@@ -1745,20 +2112,37 @@ function updateTrail() {
 
   /* ── Plume, flame & effects ── */
   const flicker = 0.92 + Math.sin(pulse) * 0.08;
+  const burnBoost = sunBurnTime > 0 ? 1 + (sunBurnTime / 0.75) * 2.2 : 1;
   const plumeStrength = 1 + speed * 0.95;
-  plumeOuter.scale.set(1.15 + speed * 0.85, 0.92 + speed * 0.45, 0.92 + speed * 0.45);
-  plumeInner.scale.set(1.05 + speed * 0.72, 0.92 + speed * 0.34, 0.92 + speed * 0.34);
-  plumeGlow.scale.setScalar(0.95 + speed * 0.58);
-  plumeOuter.material.opacity = 0.24 + speed * 0.42;
-  plumeInner.material.opacity = 0.34 + speed * 0.5;
-  plumeGlow.material.opacity = (0.38 + speed * 0.48) * flicker;
+  plumeOuter.scale.set(
+    (1.15 + speed * 0.85) * burnBoost,
+    (0.92 + speed * 0.45) * burnBoost,
+    (0.92 + speed * 0.45) * burnBoost,
+  );
+  plumeInner.scale.set(
+    (1.05 + speed * 0.72) * burnBoost,
+    (0.92 + speed * 0.34) * burnBoost,
+    (0.92 + speed * 0.34) * burnBoost,
+  );
+  plumeGlow.scale.setScalar((0.95 + speed * 0.58) * burnBoost);
+  plumeOuter.material.opacity = Math.min(0.24 + speed * 0.42 + (burnBoost - 1) * 0.22, 1);
+  plumeInner.material.opacity = Math.min(0.34 + speed * 0.5 + (burnBoost - 1) * 0.2, 1);
+  plumeGlow.material.opacity = Math.min((0.38 + speed * 0.48 + (burnBoost - 1) * 0.18) * flicker, 1);
 
-  flame.scale.set(1.18 + speed * 0.68, 1 + speed * 0.3, 1 + speed * 0.3);
-  flame.material.opacity = 0.62 + speed * 0.34;
-  flameCore.scale.set(1.06 + speed * 0.48, 0.94 + speed * 0.16, 0.94 + speed * 0.16);
-  flameCore.material.opacity = 0.78 + speed * 0.2;
-  exhaustHalo.scale.setScalar(0.96 + speed * 0.52);
-  exhaustHalo.material.opacity = (0.22 + speed * 0.28) * (0.9 + Math.sin(pulse * 1.4) * 0.1);
+  flame.scale.set(
+    (1.18 + speed * 0.68) * burnBoost,
+    (1 + speed * 0.3) * burnBoost,
+    (1 + speed * 0.3) * burnBoost,
+  );
+  flame.material.opacity = Math.min(0.62 + speed * 0.34 + (burnBoost - 1) * 0.18, 1);
+  flameCore.scale.set(
+    (1.06 + speed * 0.48) * burnBoost,
+    (0.94 + speed * 0.16) * burnBoost,
+    (0.94 + speed * 0.16) * burnBoost,
+  );
+  flameCore.material.opacity = Math.min(0.78 + speed * 0.2 + (burnBoost - 1) * 0.14, 1);
+  exhaustHalo.scale.setScalar((0.96 + speed * 0.52) * burnBoost);
+  exhaustHalo.material.opacity = Math.min((0.22 + speed * 0.28 + (burnBoost - 1) * 0.12) * (0.9 + Math.sin(pulse * 1.4) * 0.1), 1);
 
   boosterFlames.forEach((boosterFlame, index) => {
     const offsetPulse = pulse + index * 1.2;
@@ -1788,6 +2172,45 @@ function updateCamera() {
   horizontalForward.applyAxisAngle(yAxis, rocket.rotation.y);
   cameraLookTarget.copy(rocket.position).add(cameraLookOffset).add(horizontalForward.multiplyScalar(6.2));
   camera.lookAt(cameraLookTarget);
+}
+
+function resolvePlanetCollisions() {
+  planets.forEach((planetGroup) => {
+    if (isAutoPiloting && autoPilotSection?.id === planetGroup.userData.section.id) {
+      return;
+    }
+
+    if (undockGraceTime > 0 && undockGraceSection?.id === planetGroup.userData.section.id) {
+      return;
+    }
+
+    const collisionRadius = planetGroup.userData.radius * sceneScaleFactor + 1.6;
+    collisionOffset.copy(rocket.position).sub(planetGroup.position);
+    let distance = collisionOffset.length();
+
+    if (distance >= collisionRadius) {
+      return;
+    }
+
+    if (distance < 0.001) {
+      collisionOffset.set(1, 0, 0);
+      distance = 1;
+    }
+
+    collisionNormal.copy(collisionOffset).divideScalar(distance);
+    rocket.position.copy(planetGroup.position).addScaledVector(collisionNormal, collisionRadius);
+
+    const inwardVelocity = rocketVelocity.dot(collisionNormal);
+    if (inwardVelocity < 0) {
+      rocketVelocity.addScaledVector(collisionNormal, -inwardVelocity * 1.1);
+    }
+
+    if (isAutoPiloting && autoPilotSection?.id !== planetGroup.userData.section.id) {
+      isAutoPiloting = false;
+      autoPilotSection = null;
+      updateStatus(`Re-routing around ${planetGroup.userData.section.title}`);
+    }
+  });
 }
 
 function syncHud(now) {
@@ -1822,7 +2245,7 @@ function syncHud(now) {
     const tether = label.querySelector(".hud-tether");
     const distToRocket = voyager.position.distanceTo(rocket.position);
 
-    if (distToRocket > 200) {
+    if (distToRocket > 350) {
       label.style.opacity = "0";
       return;
     }
@@ -2037,28 +2460,69 @@ function tick(now) {
   const delta = Math.min((now - lastTime) / 1000, 0.05);
   lastTime = now;
 
+  if (undockGraceTime > 0) {
+    undockGraceTime = Math.max(0, undockGraceTime - delta);
+    if (undockGraceTime === 0) {
+      undockGraceSection = null;
+    }
+  }
+
+  if (sunBurnTime > 0) {
+    sunBurnTime = Math.max(0, sunBurnTime - delta);
+  }
+  if (sunRespawnTimer > 0) {
+    sunRespawnTimer = Math.max(0, sunRespawnTimer - delta);
+    if (sunRespawnTimer === 0) {
+      respawnAtEarth(true);
+    }
+  }
+
+  if (sunBurnOverlay) {
+    const burnProgress = sunBurnTime > 0 ? sunBurnTime / 0.75 : 0;
+    sunBurnOverlay.style.opacity = burnProgress > 0 ? `${0.18 + burnProgress * 0.72}` : "0";
+  }
+
   stars.rotation.y += 0.00018;
   stars.rotation.x += 0.00003;
 
-  if (isAutoPiloting) {
+  if (nebulaField) {
+    nebulaField.rotation.y += 0.00005;
+    nebulaField.rotation.z += 0.00002;
+  }
+
+  if (sunRespawnTimer > 0) {
+    rocket.rotation.z += delta * 2.8;
+    rocket.rotation.x = THREE.MathUtils.lerp(rocket.rotation.x, 0.8, 0.1);
+    rocket.rotation.y += delta * 1.9;
+  } else if (isAutoPiloting) {
     handleAutoPilot(delta);
   } else {
     handleDesktopMovement(delta);
   }
+
+  const sunCollisionRadius = sunGroup.userData.radius * sceneScaleFactor + 0.8;
+  if (sunRespawnTimer <= 0 && rocket.position.distanceTo(sunGroup.position) < sunCollisionRadius) {
+    triggerSunBurn();
+  }
+
+  resolvePlanetCollisions();
 
   updateDockCandidate();
   updateCamera();
 
   // Execute Cinematic Warp override over the standard updateCamera lerp
   if (cinematicFadeValue > 0) {
-    cinematicFadeValue -= delta * 0.45; 
+    cinematicFadeValue -= delta * 0.45;
     const warpProgress = Math.max(0, cinematicFadeValue);
-    const easeProgress = warpProgress * warpProgress; 
-    
-    // Lerp from Deep Space (400) to Sun Level (25)
-    cinematicNearPosition.set(0, 8, 25 * sceneScaleFactor);
+    const easeProgress = warpProgress * warpProgress;
+
+    // Lerp from Deep Space (400) to Sun Level (45)
+    cinematicNearPosition.set(0, 8, 45 * sceneScaleFactor);
     camera.position.lerpVectors(cinematicNearPosition, cinematicFarPosition, easeProgress);
   }
+
+  stars.position.copy(camera.position);
+  galaxyMesh.position.copy(camera.position);
 
   voyager1.rotation.y += 0.0005;
   voyager1.rotation.z += 0.0002;
@@ -2067,40 +2531,47 @@ function tick(now) {
 
   asteroidBelt.rotation.y += 0.00015; // Subtle orbital drift for the entire belt
 
+  updateSpaceDust();
+  
+  if (now - lastScannerUpdateTime > scannerUpdateInterval) {
+    updateScanner();
+    lastScannerUpdateTime = now;
+  }
+
   // --- Comet Logic ---
   comet.userData.spawnTimer += delta;
   if (!comet.userData.isActive && comet.userData.spawnTimer > 45) { // Every 45 seconds
-      comet.userData.isActive = true;
-      comet.userData.spawnTimer = 0;
-      const startSide = Math.random() > 0.5 ? 1 : -1;
-      comet.position.set(startSide * 200, THREE.MathUtils.randFloat(-50, 50), -200);
-      comet.userData.velocity.set(-startSide * 60, 0, 40); // Fast transit
+    comet.userData.isActive = true;
+    comet.userData.spawnTimer = 0;
+    const startSide = Math.random() > 0.5 ? 1 : -1;
+    comet.position.set(startSide * 200, THREE.MathUtils.randFloat(-50, 50), -200);
+    comet.userData.velocity.set(-startSide * 60, 0, 40); // Fast transit
   }
 
   if (comet.userData.isActive) {
-      comet.position.addScaledVector(comet.userData.velocity, delta);
-      
-      const positions = comet.userData.positions;
-      for (let i = 0; i < 200; i++) {
-          const idx = i * 3;
-          // Slowly drift old particles back
-          positions[idx] -= (comet.userData.velocity.x * 0.05) + Math.random() * 0.1;
-          positions[idx + 1] += Math.random() * 0.1 - 0.05;
-          positions[idx + 2] -= (comet.userData.velocity.z * 0.05) + Math.random() * 0.1;
-          
-          // Reset particles near core occasionally
-          if (Math.abs(positions[idx]) > 15) {
-              positions[idx] = 0;
-              positions[idx + 1] = 0;
-              positions[idx + 2] = 0;
-          }
-      }
-      comet.children[1].geometry.attributes.position.needsUpdate = true;
+    comet.position.addScaledVector(comet.userData.velocity, delta);
 
-      if (comet.position.z > 200) {
-          comet.userData.isActive = false;
-          comet.position.y = 500; // Reset
+    const positions = comet.userData.positions;
+    for (let i = 0; i < 200; i++) {
+      const idx = i * 3;
+      // Slowly drift old particles back
+      positions[idx] -= (comet.userData.velocity.x * 0.05) + Math.random() * 0.1;
+      positions[idx + 1] += Math.random() * 0.1 - 0.05;
+      positions[idx + 2] -= (comet.userData.velocity.z * 0.05) + Math.random() * 0.1;
+
+      // Reset particles near core occasionally
+      if (Math.abs(positions[idx]) > 15) {
+        positions[idx] = 0;
+        positions[idx + 1] = 0;
+        positions[idx + 2] = 0;
       }
+    }
+    comet.children[1].geometry.attributes.position.needsUpdate = true;
+
+    if (comet.position.z > 200) {
+      comet.userData.isActive = false;
+      comet.position.y = 500; // Reset
+    }
   }
 
   // --- HUD Sway Logic ---
@@ -2110,12 +2581,12 @@ function tick(now) {
   planets.forEach(p => {
     const dist = rocket.position.distanceTo(p.position);
     if (dist < 15 && !isAutoPiloting && rocketVelocity.length() > 0.1) {
-       // Slingshot: Add a slight pull vector
-       slingshotPull.copy(p.position).sub(rocket.position).normalize().multiplyScalar(0.005);
-       rocketVelocity.add(slingshotPull);
-       
-       // Play whoosh occasionally
-       if (Math.random() < 0.01) SoundEngine.playWhoosh(1.0 - (dist / 15));
+      // Slingshot: Add a slight pull vector
+      slingshotPull.copy(p.position).sub(rocket.position).normalize().multiplyScalar(0.005);
+      rocketVelocity.add(slingshotPull);
+
+      // Play whoosh occasionally
+      if (Math.random() < 0.01) SoundEngine.playWhoosh(1.0 - (dist / 15));
     }
   });
 
@@ -2129,8 +2600,8 @@ function tick(now) {
   requestAnimationFrame(tick);
 }
 
-setContent(null);
 resize();
+respawnAtEarth(false);
 requestAnimationFrame(tick);
 
 // Global debug access for the console

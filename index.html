@@ -16,6 +16,7 @@
     <div class="loader-ring"></div>
     <div id="loader-text">Loading Universe... 0%</div>
   </div>
+  <div class="sun-burn-overlay" id="sun-burn-overlay" aria-hidden="true"></div>
   <div class="app-shell">
     <div class="container">
       <canvas class="scene-canvas" aria-hidden="true"></canvas>
@@ -33,18 +34,18 @@
       <div class="panel glass">
         <h2>Flight Controls</h2>
         <p class="desktop-copy">
-          Use the <span>arrow keys</span> to move around and click on a <span>planet</span> or the <span>Sun</span> to travel there.
+          Use the <span>arrow keys</span> to move around. You can also click on a <span>planet</span> to travel there.
           Press <span>9</span> to ascend and <span>3</span> to descend. Use <span>+</span> and <span>-</span> to zoom.
         </p>
         <p class="mobile-copy">
-          Swipe to look around and tap a <span>planet</span> or the <span>Sun</span> to travel there.
+          Swipe to look around and tap a <span>planet</span> to travel there.
         </p>
       </div>
     </aside>
 
     <section class="info-card glass" aria-live="polite">
       <h2 id="section-title">Explore the system</h2>
-      <p id="section-description">Click a planet or the Sun to jump to a section and fly around with the arrow keys.</p>
+      <p id="section-description">Fly around manually with the arrow keys, or click a planet to travel there.</p>
       <div class="info-grid" id="section-points"></div>
     </section>
 
@@ -52,6 +53,7 @@
       <button class="zoom-button" id="zoom-in" type="button" aria-label="Zoom in">+</button>
       <button class="zoom-button" id="zoom-out" type="button" aria-label="Zoom out">-</button>
     </div>
+    <div class="nav-scanner" id="nav-scanner" aria-hidden="true"></div>
   </div>
 
   <script type="module" src="/src/main.js"></script>

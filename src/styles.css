@@ -63,6 +63,18 @@ body {
   overflow: hidden;
 }
 
+.sun-burn-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+  opacity: 0;
+  background:
+    radial-gradient(circle at center, rgba(255, 246, 196, 0.95) 0, rgba(255, 173, 71, 0.82) 24%, rgba(255, 84, 24, 0.5) 52%, rgba(22, 6, 0, 0.08) 100%);
+  mix-blend-mode: screen;
+  transition: opacity 120ms linear;
+}
+
 .scene-canvas {
   position: fixed;
   inset: 0;
@@ -555,3 +567,67 @@ body {
   0% { opacity: 0.6; }
   100% { opacity: 1; }
 }
+
+/* --- Navigation Scanner HUD --- */
+.nav-scanner {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.scanner-icon {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(10, 25, 45, 0.7);
+  border: 1px solid rgba(130, 243, 255, 0.3);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: opacity 0.3s ease, border-color 0.3s ease;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.scanner-icon:hover {
+  border-color: rgba(130, 243, 255, 0.8);
+  background: rgba(10, 25, 45, 0.9);
+}
+
+.scanner-icon::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid rgba(130, 243, 255, 0.1);
+  animation: radar-ping 2s infinite;
+}
+
+.scanner-arrow {
+  position: absolute;
+  font-size: 0.9rem;
+  color: var(--cyan);
+  pointer-events: none;
+}
+
+@keyframes radar-ping {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* --- Mobile HUD Positioning for Scanner --- */
+@media (max-width: 900px) {
+  .scanner-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 0.6rem;
+  }
+}
+
