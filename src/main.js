@@ -3164,9 +3164,11 @@ function updateRenderQuality(width, height) {
     currentLayout === LAYOUT_PRESETS.desktop &&
     width >= 1100 &&
     height >= 700;
-  const pixelRatioCap = isDesktopQuality ? 1.5 : 1;
+  
+  // Allow mobile to use up to 2.0 pixel ratio to fix blurriness
+  const pixelRatioCap = Math.min(window.devicePixelRatio, 2);
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap));
+  renderer.setPixelRatio(pixelRatioCap);
   usePostProcessing = isDesktopQuality;
   bloomPass.enabled = usePostProcessing;
   asteroidBelt.count = getTargetAsteroidCount();
